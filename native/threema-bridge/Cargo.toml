@@ -1,0 +1,31 @@
+[package]
+name = "threema-gemini-bridge"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+libthreema = { path = "libthreema/lib", features = ["cli"] }
+tokio = { version = "1", features = ["full"] }
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+tracing = "0.1"
+tracing-subscriber = "0.3"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "multipart"] }
+data-encoding = "2"
+# Threema's modern reactions are protobuf, and libthreema's generated types need the runtime
+# in scope to be decoded.
+prost = "0.14"
+# Threema blobs are NaCl secretboxes. This crate keeps NaCl's tag-at-the-front layout rather
+# than the RustCrypto AEAD convention, so it reads Threema's bytes as they are on the wire.
+crypto_secretbox = { version = "0.1", features = ["salsa20"] }
+# Contact matching hashes addresses with HMAC-SHA256 before they leave the device.
+hmac = "0.12"
+sha2 = "0.10"
+
+[build-dependencies]
+prost-build = "0.14"
+
+[patch.crates-io]
+blake2 = { path = "patches/blake2" }

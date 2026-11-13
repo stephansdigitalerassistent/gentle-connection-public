@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- "Something is strange": a heavy, round question mark she can make out without her
+         glasses. Drawn rather than typed, so its weight does not depend on the phone's font. -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="3.2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M8.2,8.4 C8.2,6.1 9.9,4.4 12,4.4 C14.1,4.4 15.8,6 15.8,8 C15.8,9.7 14.8,10.6 13.5,11.4 C12.5,12 12,12.8 12,14.1 L12,14.6" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12,17.2 A2,2 0 1,1 12,21.2 A2,2 0 1,1 12,17.2 Z" />
+</vector>

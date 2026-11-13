@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        The same name as on the phone. It is one thing in two places, not two apps — and it is a
+        name rather than a sentence, so it is the same in German. Marked untranslatable rather
+        than copied into values-de, which is what the phone module does and what left lint
+        reporting a missing German translation of a word that is already German.
+    -->
+    <string name="app_name" translatable="false">gentle connection</string>
+
+    <!-- The one line that is not a person. Named for what it does, not for what it is. -->
+    <string name="watch_find_phone">Find my phone</string>
+
+    <!-- Said only once the phone has actually been asked and had nobody to give. -->
+    <string name="watch_nobody">Nobody here yet. The people on your telephone will appear here.</string>
+
+    <!-- The same question the telephone asks, in the same words. -->
+    <string name="watch_call_question">Shall I ring %s?</string>
+    <string name="watch_yes">Yes, ring</string>
+    <string name="watch_no">Not now</string>
+    <string name="watch_ok">All right</string>
+
+    <!-- The one failure the watch genuinely knows about: the phone is off, or too far away. -->
+    <string name="watch_phone_not_there">Your telephone is not answering. It may be switched off or too far away.</string>
+</resources>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>gentle connection — Datenschutz & Privacy</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="privacy-body">
+  <div class="portal-container">
+    <header class="portal-header">
+      <h1>gentle connection</h1>
+      <p class="subtitle">Datenschutzerklärung & Privacy Policy</p>
+    </header>
+
+    <main class="card">
+      <h2>Datenschutz auf einen Blick</h2>
+      <p>
+        <strong>gentle connection</strong> wurde entwickelt, um älteren Menschen eine ruhige, einfache und sichere Verbindung zu ihren Liebsten zu ermöglichen. Der Schutz aller persönlichen Daten steht an oberster Stelle.
+      </p>
+
+      <h3>1. Welche Daten werden verarbeitet?</h3>
+      <p>
+        Über dieses Caregiver-Portal werden ausschließlich Einstellungen zur Anpassung des Telefons gespeichert:
+      </p>
+      <ul>
+        <li><strong>Geräte-Kopplungscode / Geräte-ID:</strong> Zur eindeutigen Zuordnung des Smartphones.</li>
+        <li><strong>Lieblingskontakte:</strong> Nur Name und Sortierreihenfolge. Wer dazugehört, wird auf dem Smartphone mit einem Stern bestimmt; Telefonnummern und Fotos verlassen das Smartphone nicht.</li>
+        <li><strong>Gruppen:</strong> Nur der Name, den das Smartphone selbst für eine Gruppe anzeigt, und eine interne Kennung, damit die Gruppe wiedererkannt wird — dazu die Angabe, welche Gruppen auf dem Smartphone nicht angezeigt werden sollen. Wer in einer Gruppe ist und was darin geschrieben wird, verlässt das Smartphone nicht.</li>
+        <li><strong>Anzeige-Einstellungen:</strong> Textgröße, Fotogröße, Dunkelmodus (Dark Mode).</li>
+        <li><strong>Funktionseinstellungen:</strong> Aktivierung von Nachrichten, Post (E-Mail) und sanften Hinweisen (Nudges).</li>
+        <li><strong>Standort des Smartphones:</strong> Zusammen mit dem Lebenszeichen wird alle 15 Minuten die Position des Smartphones übermittelt — mit dem Zeitpunkt der Messung, damit erkennbar bleibt, ob es sich um den jetzigen Aufenthaltsort oder um einen früheren handelt. Wird die Standortberechtigung «immer zulassen» erteilt, kann die Position auch dann bestimmt werden, wenn das Smartphone gerade nicht benutzt wird; andernfalls wird die zuletzt bekannte Position gemeldet. Der Standort wird ausschliesslich übermittelt, solange mindestens eine angehörige Person mit dem Smartphone verknüpft ist, und nur an diese. Wird die Standortberechtigung auf dem Smartphone nicht erteilt, entfällt diese Angabe vollständig; es entsteht dadurch kein Nachteil bei allen übrigen Funktionen. Es wird keine Bewegungshistorie gespeichert: es gibt immer nur die eine, zuletzt gemeldete Position.</li>
+        <li><strong>Störungsmeldungen:</strong> Was auf dem Smartphone nicht funktioniert hat — etwa eine Nachricht, die nicht gesendet werden konnte — mit Zeitpunkt und, wo es zum Verständnis nötig ist, dem Vornamen der betroffenen Person. Dazu ein Lebenszeichen des Smartphones alle 15 Minuten, damit ein Ausfall überhaupt auffällt. Nachrichteninhalte gehören nicht dazu.</li>
+      </ul>
+
+      <h3>2. Wo werden die Daten gespeichert?</h3>
+      <p>
+        Die Konfigurationsdaten werden in Google Cloud Firestore unter dem Pfad <code>devices/{deviceId}/settings/current</code> gespeichert und direkt mit dem Smartphone des Angehörigen synchronisiert. Die vom Smartphone gemeldeten Gruppennamen liegen unter <code>devices/{deviceId}/settings/groups</code>. Störungsmeldungen liegen unter <code>devices/{deviceId}/status/current</code>; sie werden ausschließlich vom Smartphone geschrieben und von den verknüpften Angehörigen gelesen. Lebenszeichen und Standort liegen im Gerätedokument <code>devices/{deviceId}</code> und werden ebenfalls nur vom Smartphone selbst geschrieben. Beim Öffnen der Karte über den entsprechenden Link werden die Koordinaten an OpenStreetMap übermittelt — das geschieht ausschliesslich dann, wenn der Link aktiv angeklickt wird. Im Übrigen findet keine Weitergabe an Dritte statt.
+      </p>
+
+      <h3>3. Begleit-App «gentle device»</h3>
+      <p>
+        <strong>gentle device</strong> (Paket <code>ch.heuscher.gentledevice</code>) ist eine optionale Begleit-App für die Geräteverwaltung (Device Owner). Sie wird bei der Ersteinrichtung des Smartphones per QR-Code installiert. Sie stellt sicher, dass die Systemeinstellungen des Smartphones erhalten bleiben, und hält gentle connection aktiv und auf dem aktuellen Stand.
+      </p>
+      <p>
+        gentle device übermittelt ausschließlich technische Zustandsdaten an Google Cloud Firestore:
+      </p>
+      <ul>
+        <li><strong>Batterie und Speicher:</strong> Akkustand in Prozent, Ladezustand und Akkugesundheit sowie freier und gesamter Speicherplatz.</li>
+        <li><strong>Netzwerk und Verbindung:</strong> Art der Verbindung (WLAN oder Mobilfunk), Mobilfunk-Signalstärke, Roaming-Status und Zustand der SIM-Karte.</li>
+        <li><strong>Geräte- und Systemstatus:</strong> Gerätemodell, Hersteller, Android-Version, Sicherheitsupdate-Stand sowie die Laufzeit des Smartphones seit dem letzten Start.</li>
+        <li><strong>Zustand von gentle connection:</strong> Ob gentle connection installiert und als Start-App (Home-App) eingerichtet ist, die Versionsnummern beider Apps, ob der Nachrichtendienst aktiv läuft und wann das letzte Lebenszeichen empfangen wurde.</li>
+        <li><strong>Installierte Apps:</strong> Eine Liste der installierten, startbaren Apps (Name und Paketkennung), damit diese bei Bedarf aus der Ferne geöffnet werden können.</li>
+        <li><strong>Richtlinien und Schutz:</strong> Welche Einstellungen und Einschränkungen aktiv durchgesetzt werden und ob einzelne Vorgaben abweichen.</li>
+        <li><strong>Ergebnisse von Updates:</strong> Ob Aktualisierungen der gentle-Apps erfolgreich waren oder fehlschlugen, mit Versionsnummern, Fehlerdetails und Zeitpunkt.</li>
+        <li><strong>Protokoll der Verwaltung (Audit-Log):</strong> Welche Verwaltungsschritte und Befehle auf dem Smartphone ausgeführt wurden, mit Zeitpunkt und Details.</li>
+      </ul>
+      <p>
+        Aus Firestore liest die App die von der Eigentümerin oder dem Eigentümer festgelegten Einstellungen (Richtlinien) sowie wartende Befehle (wie Geräteneustart, Status-Aktualisierung oder das Öffnen einer App) und meldet deren Ausführung zurück.
+      </p>
+      <p>
+        gentle device speichert diese Daten im selben Firebase-Projekt (Google Cloud Firestore) wie gentle connection unter den Pfaden <code>devices/{deviceId}/managed/state</code>, <code>devices/{deviceId}/managed/compliance</code>, <code>devices/{deviceId}/policy/current</code>, <code>devices/{deviceId}/commands</code> und <code>devices/{deviceId}/audit</code>. Ausschließlich die verknüpfte Eigentümerin oder der verknüpfte Eigentümer des Smartphones kann diese Daten einsehen.
+      </p>
+      <p>
+        gentle device liest keine Nachrichten, keine Kontakte, keine Anrufe, keine Fotos und keinen Standort.
+      </p>
+
+      <h3>4. Post (Gmail, nur lesen)</h3>
+      <p>
+        Wenn die Post-Funktion eingerichtet ist, liest gentle connection auf dem Smartphone die Briefe im Posteingang des dort angemeldeten Gmail-Kontos, damit sie gross und einfach angezeigt werden können. Der Zugriff erfolgt über die Gmail-API mit der Berechtigung <code>gmail.readonly</code>: Die App kann keine E-Mails senden, ändern, löschen oder als gelesen markieren.
+      </p>
+      <ul>
+        <li>Die Briefe werden direkt von Google auf das Smartphone geladen und nur dort gespeichert. Sie werden nicht an das Caregiver-Portal, an Firebase oder an andere Server übermittelt.</li>
+        <li>Es wird kein Passwort gespeichert. Die Freigabe verwaltet Google; sie kann jederzeit unter <a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a> widerrufen werden.</li>
+        <li>Die Daten werden nicht für Werbung verwendet, nicht verkauft, nicht an Dritte weitergegeben und nicht zum Trainieren von KI-Modellen genutzt. Kein Mensch liest sie mit.</li>
+      </ul>
+      <p lang="en">
+        <em>Google API disclosure:</em> gentle connection's use and transfer of information received from Google APIs will adhere to the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including the Limited Use requirements. Gmail data is read on the phone only, displayed to its owner, and never transferred to our servers or third parties.
+      </p>
+
+      <h3>5. Keine Werbung, kein Tracking</h3>
+      <p>
+        gentle connection enthält keinerlei Werbung, Analysemodule oder Tracking-Dienste. Das Portal dient ausschließlich der Fernverwaltung durch bevollmächtigte Angehörige.
+      </p>
+
+      <h3>6. Ihre Rechte</h3>
+      <p>
+        Sie können gespeicherte Lieblingskontakte und Einstellungen jederzeit über dieses Portal ändern oder löschen.
+      </p>
+
+      <h3>7. Kontakt</h3>
+      <p>
+        [Operator / Maintainer], <a href="mailto:contact@example.com">contact@example.com</a>
+      </p>
+
+      <div class="footer-links" style="margin-top: 2rem;">
+        <a href="index.html" class="btn btn-secondary">← Zurück zum Portal</a>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

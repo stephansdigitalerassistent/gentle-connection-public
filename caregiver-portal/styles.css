@@ -1,0 +1,914 @@
+:root {
+  --bg-color: #FAF8F5;
+  --card-bg: #FFFFFF;
+  --primary-color: #2D5A27;
+  --primary-hover: #1E3E1A;
+  --accent-color: #E87A5D;
+  --text-main: #1C1D1B;
+  --text-muted: #5A6058;
+  --border-color: #E2DDD5;
+  --danger-color: #C62828;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --radius-lg: 16px;
+  --radius-md: 10px;
+  --font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-color: #121411;
+    --card-bg: #1C201B;
+    --primary-color: #81C784;
+    --primary-hover: #A5D6A7;
+    --accent-color: #FF8A65;
+    --text-main: #F1F3F0;
+    --text-muted: #A3A8A0;
+    --border-color: #2C332B;
+    --danger-color: #EF5350;
+  }
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  line-height: 1.5;
+  padding: 1.5rem;
+}
+
+.portal-container {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.portal-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.portal-header h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  letter-spacing: -0.5px;
+}
+
+.portal-header .subtitle {
+  color: var(--text-muted);
+  font-size: 1.1rem;
+}
+
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* The title takes the slack and the button beside it keeps its own words on one line. */
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.75rem;
+}
+
+.card-title > span {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.card-title .btn,
+.contact-header .btn {
+  white-space: nowrap;
+}
+
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  color: var(--text-main);
+}
+
+.form-group .help-text {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 0.4rem;
+}
+
+input[type="text"],
+input[type="tel"],
+input[type="url"],
+select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--card-bg);
+  color: var(--text-main);
+  font-size: 1rem;
+  transition: border-color 0.2s ease;
+}
+
+input[type="text"]:focus,
+input[type="tel"]:focus,
+input[type="url"]:focus,
+select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.toggle-group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.toggle-group:last-child {
+  border-bottom: none;
+}
+
+.toggle-label {
+  display: flex;
+  flex-direction: column;
+  /* Takes the slack, so the switch beside it never has to give any up. */
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.toggle-label span {
+  font-weight: 600;
+}
+
+.toggle-label small {
+  color: var(--text-muted);
+}
+
+/*
+ * The on/off switches.
+ *
+ * These looked broken on the phone: the knob hung off the right-hand end of the green track, and
+ * the one that was off had squashed down to what looked like a bare circle with no track at all.
+ * Nothing was wrong with the switch — it is a flex item in .toggle-group, it had no flex-shrink,
+ * and the labels beside it ("Zeigt maximal eine wichtigste Ungelesen-Karte oben auf dem Schirm
+ * an") are long enough on a narrow screen to squeeze it. The track narrowed; the knob, absolutely
+ * positioned at a fixed 20px and translated a fixed 24px, did not.
+ *
+ * So the size is stated as something that cannot be taken away, and the knob is positioned from
+ * both ends rather than by a hard-coded distance — if this ever gets squeezed again it will look
+ * cramped instead of broken.
+ */
+.switch {
+  /*
+   * Stated once, so that the knob's travel below is arithmetic rather than a number somebody
+   * measured. Changing the track here moves the knob correctly without anything else being edited.
+   */
+  --track-width: 52px;
+  --track-height: 28px;
+  --knob-inset: 4px;
+  position: relative;
+  display: inline-block;
+  flex: 0 0 auto;
+  width: var(--track-width);
+  height: var(--track-height);
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #9aa0a6;
+  transition: background-color .2s ease;
+  border-radius: 999px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  top: var(--knob-inset);
+  bottom: var(--knob-inset);
+  left: var(--knob-inset);
+  /* Square, from its own height, so the knob stays round at any track width. */
+  aspect-ratio: 1;
+  background-color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  transition: transform .2s ease;
+  border-radius: 50%;
+}
+
+/*
+ * The part of the switch a thumb has to find, which is larger than the part it can see.
+ *
+ * 28px is a fine height to look at and a poor one to hit, and the person hitting it is often
+ * doing so one-handed on a train while worrying about their mother. Transparent, and the full
+ * height of the row it sits in, so the switch keeps its proportions and stops needing aim.
+ */
+.slider::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 44px;
+}
+
+input:checked + .slider {
+  background-color: var(--primary-color);
+}
+
+/*
+ * The travel is the track's width less its height: the knob is inset by the same amount at both
+ * ends, so those two insets and the knob together are exactly one track height. Written that way
+ * rather than as the 24px it currently comes to, which was a number that stopped being true the
+ * moment anything about the switch changed.
+ */
+input:checked + .slider:before {
+  transform: translateX(calc(var(--track-width) - var(--track-height)));
+}
+
+/* Visible when tabbing, since the real checkbox is invisible and would take the ring with it. */
+.switch input:focus-visible + .slider {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+  text-decoration: none;
+  min-height: 44px;
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-hover);
+}
+
+.btn-secondary {
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+}
+
+.btn-secondary:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.btn-danger {
+  background-color: transparent;
+  color: var(--danger-color);
+  border: 1px solid var(--danger-color);
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+}
+
+.btn-danger:hover {
+  background-color: var(--danger-color);
+  color: white;
+}
+
+/*
+ * One fault, on the status card.
+ *
+ * Marked with the danger colour down the left edge rather than as a filled red box: this list is
+ * read by somebody who is worried about their mother, and a page that shouts is a page they will
+ * stop opening. The border is enough to find at a glance and quiet enough to sit under for a while.
+ */
+.alert-row {
+  border-left: 4px solid var(--danger-color);
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.alert-row:last-child {
+  margin-bottom: 0;
+}
+
+.alert-what {
+  font-weight: 600;
+}
+
+.alert-when {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+}
+
+.contact-card {
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.contact-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.contact-order-controls {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.btn-icon {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.btn-icon:hover {
+  background: var(--border-color);
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+/*
+ * Phone width.
+ *
+ * This page is opened on a phone more often than on a desk: it is what gets checked from the
+ * tram, and the check is usually one switch. Two things were wrong there and both cost the row
+ * its readability rather than merely its looks.
+ *
+ * The frame ate the content. 1.5rem of body padding inside 1.75rem of card padding takes 104px
+ * off a 390px screen — over a quarter of it — leaving a German sentence like "Klingelton nach
+ * einiger Zeit stummschalten" to wrap through a column barely wide enough for one word of it.
+ *
+ * And the rows holding a dropdown rather than a switch could not give: .quiet-hours refuses to
+ * shrink (rightly — "Von 21:00 bis 07:00" is one sentence and must not break in half), so its
+ * two pickers held their full width and pushed the label into that same narrow column, or pushed
+ * the page itself sideways. Beside a switch there is room for both; beside a pair of dropdowns
+ * there is not, so at this width they take a line of their own under the words they belong to.
+ */
+@media (max-width: 600px) {
+  body {
+    padding: 1rem;
+  }
+
+  .card {
+    padding: 1.25rem;
+  }
+
+  .portal-header {
+    margin-bottom: 1.5rem;
+  }
+
+  .portal-header h1 {
+    font-size: 1.8rem;
+  }
+
+  .portal-header .subtitle {
+    font-size: 1rem;
+  }
+
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  /* A switch still sits beside its label — it is 52px, and a row that reads across is easier to
+     scan than a stack. Only what cannot fit wraps. */
+  .toggle-group {
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+  }
+
+  .quiet-hours {
+    flex: 1 0 100%;
+    justify-content: flex-start;
+  }
+
+  .quiet-hours select {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+}
+
+.banner {
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+}
+
+.banner-warning {
+  background-color: #FFF3E0;
+  border: 1px solid #FFE0B2;
+  color: #E65100;
+}
+
+.banner-info {
+  background-color: #E8F5E9;
+  border: 1px solid #C8E6C9;
+  color: #2E7D32;
+}
+
+.footer-links {
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-top: 2rem;
+}
+
+.footer-links a {
+  color: var(--primary-color);
+  text-decoration: underline;
+}
+
+/* The two hour pickers of the quiet-hours row, kept on one line beside their labels so the row
+   reads as one sentence ("Von 21:00 bis 07:00") rather than as two unrelated dropdowns. */
+.quiet-hours {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.quiet-hours label {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.quiet-hours select {
+  width: auto;
+  margin: 0;
+}
+
+.switch input:disabled + .slider {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Gerät card: the management app's report */
+.managed-table { border-collapse: collapse; width: 100%; }
+.managed-table th { text-align: left; font-weight: 600; padding: 0.25rem 1rem 0.25rem 0; vertical-align: top; white-space: nowrap; }
+.managed-table td { padding: 0.25rem 0; }
+.managed-problems { margin: 0.25rem 0 0 1.25rem; }
+.managed-problems code { font-size: 0.85em; }
+
+/* Owner badge on the Gerät card */
+.owner-badge {
+  display: inline-block;
+  background-color: var(--primary-color);
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-md);
+  vertical-align: middle;
+}
+
+@media (prefers-color-scheme: dark) {
+  .owner-badge {
+    color: var(--bg-color);
+  }
+}
+
+/* Audit log (Protokoll) on the Gerät card */
+.audit-table th { font-weight: 600; font-size: 0.8rem; }
+.audit-table td { padding: 0.35rem 0.25rem 0.35rem 0; font-size: 0.85rem; }
+
+/* Presets for channel switches */
+.presets-container {
+  margin-bottom: 1rem;
+}
+
+.preset-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.preset-btn {
+  min-height: 44px;
+  padding: 0.5rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.preset-btn.is-active,
+.preset-btn[aria-pressed="true"] {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.preset-custom-state {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--text-muted);
+  min-height: 32px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .preset-custom-state {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+  }
+}
+
+/* Details sections (Einzeln anpassen & Für Fortgeschrittene) */
+details summary {
+  cursor: pointer;
+  user-select: none;
+}
+
+details.channel-details summary {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+details.advanced {
+  border-top: 1px solid var(--border-color);
+  padding-top: 0.5rem;
+}
+
+details.advanced summary {
+  list-style: none;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-main);
+  padding: 0.75rem 0;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+details.advanced summary::-webkit-details-marker {
+  display: none;
+}
+
+details.advanced summary::after {
+  content: "▼";
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+}
+
+details.advanced[open] summary::after {
+  transform: rotate(180deg);
+}
+
+/* Save feedback status pill */
+.status-pill {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  padding: 0.65rem 1.25rem;
+  min-height: 44px;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-md);
+  background: var(--card-bg);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  pointer-events: none;
+  /* max-content, because left: 50% leaves a shrink-to-fit box only half the screen to grow
+     into — "✓ Auf dem Telefon gespeichert" broke over three lines in the middle of a phone. */
+  width: max-content;
+  max-width: calc(100vw - 2rem);
+  text-align: center;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.status-pill-saving {
+  background: var(--card-bg);
+  color: var(--text-muted);
+  border-color: var(--border-color);
+}
+
+.status-pill-success {
+  background: #E8F5E9;
+  color: #2E7D32;
+  border-color: #C8E6C9;
+}
+
+.status-pill-danger {
+  background: #FFEBEE;
+  color: var(--danger-color);
+  border-color: #FFCDD2;
+  pointer-events: auto;
+}
+
+@media (prefers-color-scheme: dark) {
+  .status-pill-success {
+    background: #1B2E1D;
+    color: #81C784;
+    border-color: #2E4B31;
+  }
+
+  .status-pill-danger {
+    background: #331A1A;
+    color: var(--danger-color);
+    border-color: #552626;
+  }
+}
+
+/* Accessible hidden attribute */
+[hidden] {
+  display: none !important;
+}
+
+/* Settings tab navigation bar */
+#settings-tab-anchor {
+  display: block;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  visibility: hidden;
+}
+
+.settings-tablist {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  gap: 0.25rem;
+  background-color: var(--card-bg);
+  border-bottom: 2px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  margin: 0 -1.75rem 1.5rem -1.75rem;
+  padding: 0.25rem 1.75rem 0 1.75rem;
+  scrollbar-width: none;
+}
+
+.settings-tablist::-webkit-scrollbar {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .settings-tablist {
+    margin: 0 -1.25rem 1.25rem -1.25rem;
+    padding: 0.25rem 1.25rem 0 1.25rem;
+  }
+}
+
+.settings-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  padding: 0.6rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  text-decoration: none;
+  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+  outline-offset: -2px;
+}
+
+.settings-tab:hover {
+  color: var(--text-main);
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+@media (prefers-color-scheme: dark) {
+  .settings-tab:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+}
+
+.settings-tab:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+.settings-tab.is-active,
+.settings-tab[aria-selected="true"] {
+  color: var(--primary-color);
+  border-bottom-color: var(--primary-color);
+  background-color: rgba(45, 90, 39, 0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  .settings-tab.is-active,
+  .settings-tab[aria-selected="true"] {
+    background-color: rgba(129, 199, 132, 0.12);
+  }
+}
+
+/*
+ * On a phone the five tabs do not fit side by side, and a bar that scrolls sideways hid
+ * "Kontakte" and "Anzeige" off the left edge with nothing to say they were there. So the tabs
+ * share the width equally instead, with the icon above a smaller label.
+ */
+@media (max-width: 600px) {
+  .settings-tablist {
+    overflow-x: visible;
+    gap: 0;
+  }
+
+  .settings-tab {
+    flex: 1 1 0;
+    min-width: 0;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.45rem 0;
+    font-size: 0.7rem;
+    letter-spacing: -0.01em;
+  }
+
+  .settings-tab-icon {
+    font-size: 1.25rem;
+    line-height: 1;
+  }
+
+  .settings-tab-label {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.settings-tabpanel {
+  display: block;
+}
+
+.settings-tabpanel[hidden] {
+  display: none !important;
+}
+
+.settings-section {
+  margin-bottom: 2rem;
+}
+
+.settings-section:last-child {
+  margin-bottom: 0;
+}
+
+.settings-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.settings-section-title {
+  font-size: 1.1rem;
+  color: var(--text-main);
+}
+
+.settings-section-title-bordered {
+  font-size: 1.1rem;
+  color: var(--text-main);
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+}
+
+.settings-subsection-title {
+  font-size: 1.05rem;
+  color: var(--text-main);
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+}
+
+.unpair-section {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.battery-advice-list {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-left: 1.25rem;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.device-id-code {
+  color: var(--primary-color);
+}
+
+
+
+
+/* Intro card on the signed-out landing page */
+.intro-lead {
+  font-size: 1.05rem;
+  line-height: 1.55;
+  margin-bottom: 1.25rem;
+}
+
+.intro-grid {
+  margin-bottom: 1.25rem;
+}
+
+.intro-heading {
+  font-size: 1.05rem;
+  color: var(--primary-color);
+  margin-bottom: 0.5rem;
+}
+
+.intro-list {
+  padding-left: 1.25rem;
+  line-height: 1.5;
+  color: var(--text-main);
+}
+
+.intro-list li {
+  margin-bottom: 0.4rem;
+}
+
+.intro-steps {
+  margin-bottom: 1.25rem;
+}
+
+.intro-en {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  border-top: 1px solid var(--border-color);
+  padding-top: 1rem;
+}

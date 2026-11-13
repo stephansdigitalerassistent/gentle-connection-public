@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>gentle connection — Caregiver Portal</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Firebase Compatibility SDKs for simple static HTML/JS without build step -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <!-- Local config (gitignored) -->
+  <script src="config.js" onerror="console.warn('config.js nicht vorhanden. Bitte config.example.js kopieren.');"></script>
+</head>
+<body>
+  <div class="portal-container">
+    <header class="portal-header">
+      <h1>gentle connection</h1>
+      <p class="subtitle">Caregiver Remote Portal</p>
+      <div id="user-bar" style="display: none; margin-top: 0.75rem; font-size: 0.95rem; color: var(--text-muted);">
+        Angemeldet als <strong id="user-email" style="color: var(--text-main);"></strong>
+        <button type="button" id="signout-btn" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.2rem 0.5rem; margin-left: 0.5rem;">Abmelden</button>
+      </div>
+    </header>
+
+    <div id="firebase-notice" class="banner banner-warning" style="display: none;"></div>
+    <div id="status-message" class="banner banner-info" style="display: none;"></div>
+
+    <!--
+      What this is, for whoever arrives without being signed in.
+
+      Visible without JavaScript or Firebase on purpose: somebody who follows a link here, or lands
+      while the SDK fails to load, should still learn what the page is for. Hidden once signed in,
+      where the overview takes its place.
+    -->
+    <div id="intro-card" class="card intro-card">
+      <h2 class="card-title">👋 Was ist gentle connection?</h2>
+      <p class="intro-lead">
+        <strong>gentle connection</strong> macht aus einem Android-Smartphone einen ruhigen, einfachen
+        Startbildschirm für einen älteren Menschen — zum Beispiel für Mutter oder Vater, deren Gedächtnis
+        nachlässt. Alles Wichtige liegt auf einer einzigen Seite, ohne Apps, Menüs oder Einstellungen.
+      </p>
+
+      <div class="grid-2 intro-grid">
+        <section>
+          <h3 class="intro-heading">📱 Auf dem Smartphone</h3>
+          <ul class="intro-list">
+            <li><strong>Anrufen mit einem Tipp</strong> — grosse Fotos der Liebsten; antippen, und es klingelt.</li>
+            <li><strong>Alle Nachrichten an einem Ort</strong> — SMS, Threema und WhatsApp zusammen, beantwortbar mit einem Herz oder Daumen.</li>
+            <li><strong>Die eigene Post</strong> — E-Mails gross und gut lesbar, nur lesen; nichts kann versehentlich gelöscht werden.</li>
+            <li><strong>Hilfe-Knopf</strong> — benachrichtigt auf Wunsch die ganze Familie gleichzeitig.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h3 class="intro-heading">🧑‍🤝‍🧑 Hier im Portal (für Angehörige)</h3>
+          <ul class="intro-list">
+            <li><strong>Sehen, ob alles funktioniert</strong> — wann das Telefon zuletzt erreichbar war und was gerade nicht klappt.</li>
+            <li><strong>Hilfe-Anfragen</strong> annehmen und bestätigen.</li>
+            <li><strong>Aus der Ferne einstellen</strong> — Reihenfolge der Kontakte, Schriftgrösse, Ruhezeiten, unbekannte Anrufer sperren und mehr.</li>
+            <li>Die betreute Person muss dafür <strong>nichts</strong> selbst einrichten.</li>
+          </ul>
+        </section>
+      </div>
+
+      <h3 class="intro-heading">So geht's los</h3>
+      <ol class="intro-list intro-steps">
+        <li>gentle connection auf dem Smartphone installieren und als Startbildschirm wählen.</li>
+        <li>Auf dem Smartphone fünfmal schnell auf die Uhrzeit tippen.</li>
+        <li>«Betreuungs-Website öffnen» wählen — oder unten mit Google anmelden und den angezeigten 6-stelligen Code eingeben.</li>
+      </ol>
+
+      <p class="intro-en" lang="en">
+        <em>In English: gentle connection turns an Android phone into one calm home screen for an elderly
+        person — call loved ones with one tap, read SMS, Threema and WhatsApp messages in one place, and read
+        email safely. This portal lets family members check that the phone is working and adjust its settings
+        from afar.</em>
+      </p>
+    </div>
+
+    <!-- Auth Card (shown when logged out) -->
+    <div id="auth-card" class="card" style="display: none; text-align: center;">
+      <h2 class="card-title" style="justify-content: center;">🔑 Anmelden</h2>
+      <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+        Am einfachsten geht es direkt vom Smartphone aus: dort fünfmal schnell auf die Uhrzeit tippen
+        und «Betreuungs-Website öffnen» wählen — die Seite verbindet sich dann von selbst, ohne Anmeldung.
+      </p>
+      <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+        Mit einem Google-Konto anmelden können Sie sich, wenn Sie von mehreren Geräten aus zugreifen
+        möchten oder der Zugang beim Löschen der Browserdaten erhalten bleiben soll.
+      </p>
+      <button type="button" id="google-login-btn" class="btn btn-primary" style="padding: 0.9rem 1.8rem; font-size: 1.1rem;">
+        Mit Google anmelden
+      </button>
+    </div>
+
+    <!-- View: Übersicht (default view after sign-in, when a device is selected) -->
+    <div id="view-overview" style="display: none;">
+      <div id="overview-actions" style="margin-bottom: 1.25rem;">
+        <button type="button" id="to-settings-btn" class="btn btn-primary" style="width: 100%; font-size: 1.05rem; padding: 0.85rem;">
+          ⚙️ Einstellungen
+        </button>
+      </div>
+
+      <!-- Device Selector Card (shown when logged in, WITHOUT device-name field) -->
+      <div id="device-selector-card" class="card" style="display: none;">
+        <h2 class="card-title">📱 Ausgewähltes Gerät</h2>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="device-select">Gerät auswählen</label>
+          <select id="device-select">
+            <option value="">-- Kein Gerät ausgewählt --</option>
+          </select>
+        </div>
+      </div>
+
+      <!--
+        What is wrong right now.
+
+        Above the settings, because somebody who opens this page while something is broken came for
+        this and not for the font size. Her own screen carries no error copy at all — that decision
+        only holds if the reason reaches somebody else, and this is where it arrives.
+      -->
+      <div id="status-card" class="card" style="display: none;">
+        <div class="card-title">
+          <span>🩺 Zustand des Smartphones</span>
+          <button type="button" id="enable-notifications-btn" class="btn btn-secondary" style="font-size: 0.85rem; padding: 0.3rem 0.75rem; display: none;">
+            Benachrichtigen
+          </button>
+        </div>
+
+        <p id="heartbeat-line" class="help-text" style="margin-bottom: 0.5rem;"></p>
+        <!-- Where the phone said it was, when it last said anything. Hidden entirely when the phone
+             has never sent a position: an empty line here would read as "location unknown", which is
+             a different and more alarming statement than "this phone does not send one". -->
+        <p id="location-line" class="help-text" style="margin-bottom: 1rem; display: none;"></p>
+        <p id="located-with-line" class="help-text" style="margin-bottom: 1rem; display: none;"></p>
+        <div id="alerts-container"></div>
+        <p id="notification-hint" class="help-text" style="margin-top: 1rem;"></p>
+      </div>
+
+      <!--
+        Active Support Requests Card (shown when an active help request exists)
+      -->
+      <div id="support-requests-card" class="card" style="display: none; border-left: 6px solid #1F5FA8;">
+        <div class="card-title">
+          <span style="color: #1F5FA8;">🆘 Hilfe-Anfrage</span>
+          <span id="support-request-badge" class="btn" style="background: #1F5FA8; color: white; font-size: 0.85rem; padding: 0.25rem 0.6rem; pointer-events: none;">Wird geladen…</span>
+        </div>
+        <div id="support-requests-container"></div>
+      </div>
+
+      <!-- What gentle device, the management app, reports about the phone. Read-only; hidden on
+           phones without the management app. -->
+      <div id="managed-card" class="card" style="display: none;">
+        <div class="card-title"><span>🛡️ Gerät</span></div>
+        <div id="managed-container"></div>
+      </div>
+    </div>
+
+    <!-- View: Einstellungen -->
+    <div id="view-settings" style="display: none;">
+      <div style="margin-bottom: 1.25rem;">
+        <button type="button" id="back-to-overview-btn" class="btn btn-secondary" style="padding: 0.75rem 1.25rem;">
+          ← Zurück zur Übersicht
+        </button>
+      </div>
+
+      <!-- Remote Settings Control Panel -->
+      <div id="settings-card" class="card" style="display: none;">
+        <div class="card-title">
+          <span>⚙️ Einstellungen für Gerät <code id="current-device-id" class="device-id-code"></code></span>
+        </div>
+
+        <!-- Sentinel anchor for smooth scrolling to top of tab bar when switching tabs -->
+        <div id="settings-tab-anchor"></div>
+
+        <!-- Settings Tab Navigation Bar -->
+        <div class="settings-tablist" role="tablist" aria-label="Einstellungen-Bereiche">
+          <button type="button" role="tab" id="tab-kontakte" class="settings-tab is-active" aria-selected="true" aria-controls="tabpanel-kontakte" tabindex="0" data-tab="kontakte">
+            <span class="settings-tab-icon" aria-hidden="true">👥</span><span class="settings-tab-label">Kontakte</span>
+          </button>
+          <button type="button" role="tab" id="tab-anzeige" class="settings-tab" aria-selected="false" aria-controls="tabpanel-anzeige" tabindex="-1" data-tab="anzeige">
+            <span class="settings-tab-icon" aria-hidden="true">🎨</span><span class="settings-tab-label">Anzeige</span>
+          </button>
+          <button type="button" role="tab" id="tab-hinweise" class="settings-tab" aria-selected="false" aria-controls="tabpanel-hinweise" tabindex="-1" data-tab="hinweise">
+            <span class="settings-tab-icon" aria-hidden="true">🔔</span><span class="settings-tab-label">Hinweise</span>
+          </button>
+          <button type="button" role="tab" id="tab-anrufe" class="settings-tab" aria-selected="false" aria-controls="tabpanel-anrufe" tabindex="-1" data-tab="anrufe">
+            <span class="settings-tab-icon" aria-hidden="true">📞</span><span class="settings-tab-label">Anrufe</span>
+          </button>
+          <button type="button" role="tab" id="tab-geraet" class="settings-tab" aria-selected="false" aria-controls="tabpanel-geraet" tabindex="-1" data-tab="geraet">
+            <span class="settings-tab-icon" aria-hidden="true">📱</span><span class="settings-tab-label">Gerät</span>
+          </button>
+        </div>
+
+        <!-- Tab Panel: Kontakte -->
+        <div role="tabpanel" id="tabpanel-kontakte" aria-labelledby="tab-kontakte" class="settings-tabpanel">
+          <!-- Favorite Faces Section -->
+          <section class="settings-section">
+            <div class="settings-section-header">
+              <h3 class="settings-section-title">❤️ Lieblingskontakte (Reihenfolge)</h3>
+            </div>
+            <p class="help-text" style="margin-bottom: 1rem;">
+              Diese Kontakte erscheinen als große Bilder auf dem Hauptbildschirm. Bei Antippen wird direkt angerufen.
+            </p>
+            <p class="help-text" style="margin-bottom: 1rem;">
+              <strong>Wer dazugehört, wird auf dem Smartphone bestimmt:</strong> markieren Sie eine Person
+              in der normalen Kontakte-App mit einem Stern. Dann erscheint sie hier und Sie können die
+              Reihenfolge festlegen. Die ersten zwei stehen zuoberst auf dem Hauptbildschirm.
+            </p>
+
+            <div id="contacts-container">
+              <!-- Dynamic contact items -->
+            </div>
+          </section>
+
+          <!-- Support Group Section (Hilfe-Knopf) -->
+          <section class="settings-section">
+            <div class="settings-section-header">
+              <h3 class="settings-section-title">🤝 Unterstützungsgruppe (Hilfe-Knopf)</h3>
+            </div>
+            <p class="help-text" style="margin-bottom: 0.5rem;">
+              Wird der Hilfe-Knopf auf dem Smartphone gedrückt, werden alle Personen dieser Gruppe
+              gleichzeitig benachrichtigt (per Messenger und SMS-Backup). Die erste Person, die
+              antwortet, anruft oder im Portal bestätigt, übernimmt die Anfrage.
+            </p>
+            <p class="help-text" style="margin-bottom: 1rem;">
+              Das Kontaktfoto der Person, die unten <strong>„Auf dem Hilfe-Knopf“</strong> gewählt ist,
+              wird auf dem Hilfe-Knopf des Smartphones angezeigt. Ohne Foto wird ein Hände-Symbol angezeigt.
+              Ohne Unterstützungsgruppe wird der Knopf auf dem Smartphone ausgeblendet.
+            </p>
+
+            <div class="grid-2">
+              <div class="form-group">
+                <label for="support-group-name">Name der Gruppe</label>
+                <input type="text" id="support-group-name" placeholder="Familie" value="Familie">
+                <small class="help-text">Wird in der Frage auf dem Schirm verwendet: „Soll deine Familie Bescheid bekommen?“</small>
+              </div>
+
+              <div class="form-group">
+                <label for="support-person-name">Name der betreuten Person</label>
+                <input type="text" id="support-person-name" placeholder="Mama" value="Mama">
+                <small class="help-text">Wie sie in den Hilferuf-Nachrichten genannt wird (z.B. „Hilfe-Anfrage von Mama“).</small>
+              </div>
+            </div>
+
+            <div class="toggle-group">
+              <div class="toggle-label">
+                <span>Standort bei Hilferuf mitsenden</span>
+                <small>Sendet den aktuellen Aufenthaltsort mit Genauigkeit und Google-Maps-Link in der Hilfenachricht mit.</small>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="support-share-location" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div style="margin-top: 1.5rem; margin-bottom: 0.75rem;">
+              <strong style="color: var(--text-main);">Mitglieder</strong>
+              <p class="help-text" style="margin-top: 0.25rem;">
+                Aus den Favoriten auswählen. Nummer, Foto, Threema und WhatsApp nimmt das Smartphone
+                aus seinem Adressbuch. Bei einer der ausgewählten Personen „Auf dem Hilfe-Knopf“ wählen,
+                um ihr Gesicht auf dem Knopf zu zeigen.
+              </p>
+            </div>
+
+            <div id="support-members-container">
+              <!-- Dynamic support member cards -->
+            </div>
+          </section>
+
+          <!-- Groups: which several-people conversations she is shown at all -->
+          <section class="settings-section">
+            <div class="settings-section-header">
+              <h3 class="settings-section-title">👨‍👩‍👧 Gruppen anzeigen</h3>
+            </div>
+            <p class="help-text" style="margin-bottom: 1rem;">
+              Gruppen, in denen sie ist. Ausgeschaltete Gruppen erscheinen nicht mehr auf dem Telefon —
+              weder auf dem Hauptbildschirm noch in der Nachrichtenliste. Niemand in der Gruppe erfährt
+              davon, und sie bleibt Mitglied.
+            </p>
+            <p class="help-text" style="margin-bottom: 1rem;">
+              Nachrichten einer ausgeschalteten Gruppe kommen weiterhin an und werden nur nicht
+              angezeigt. Beim Wiedereinschalten ist das Gespräch vollständig da.
+            </p>
+
+            <div id="groups-container">
+              <!-- Dynamic group switches -->
+            </div>
+          </section>
+
+          <!-- Status posters: whose WhatsApp statuses she is shown at all -->
+          <section class="settings-section">
+            <div class="settings-section-header">
+              <h3 class="settings-section-title">🖼️ WhatsApp-Status anzeigen</h3>
+            </div>
+            <p class="help-text" style="margin-bottom: 1rem;">
+              Personen, deren WhatsApp-Status (Bilder für alle Kontakte) auf dem Telefon erscheinen.
+              Gezeigt werden die fünf, die zuletzt etwas veröffentlicht haben, und die fünf, die am
+              meisten veröffentlichen. Ausgeschaltete Personen erscheinen nicht mehr unter „Anschauen“
+              und nicht auf dem Hauptbildschirm. Niemand erfährt davon; Nachrichten dieser Personen
+              an sie werden weiterhin angezeigt.
+            </p>
+
+            <div id="status-posters-container">
+              <!-- Dynamic status poster switches -->
+            </div>
+          </section>
+
+          <!-- Senders: which of the senders the phone takes for companies are really people -->
+          <details class="advanced" style="margin-top: 2rem;">
+            <summary>Absender als Person behandeln</summary>
+            <div style="padding-top: 1rem;">
+              <p class="help-text" style="margin-bottom: 1rem;">
+                Absender, die das Telefon für eine Firma hält — weil sie einen Namen statt einer Nummer
+                verwenden oder eine Kurznummer. Solche Nachrichten bekommen kein Gesicht, erscheinen nicht
+                auf dem Hauptbildschirm, und das Telefon gibt keinen Ton.
+              </p>
+              <p class="help-text" style="margin-bottom: 1rem;">
+                Wo das falsch ist — die Arztpraxis, die Apotheke, die Spitex — schalten Sie den Absender
+                hier ein. Dann meldet sich das Telefon wie bei einer Person. Antworten kann sie darauf
+                weiterhin nicht: hinter einem Namen wie „Reinigung!“ steht niemand, der eine Antwort
+                empfangen könnte.
+              </p>
+
+              <div class="toggle-group">
+                <div class="toggle-label">
+                  <span>Nachrichten von Firmen anzeigen</span>
+                  <small>
+                    Standardmässig ein. Ausgeschaltet erscheinen Nachrichten von Firmen gar nicht mehr
+                    auf dem Telefon — die Nachrichtenliste enthält dann nur noch Menschen. Sinnvoll dort,
+                    wo mehr von Parking-Apps, Lieferdiensten und Werbung kommt als von der Familie.
+                  </small>
+                  <small>
+                    Bedenken Sie, was damit ebenfalls verschwindet: der Code der Bank, die Bestätigung
+                    der Praxis, die Meldung der Apotheke. Einzelne Absender, die Sie oben als Person
+                    eingeschaltet haben, bleiben sichtbar. Nichts wird gelöscht: beim Wiedereinschalten
+                    ist alles wieder da.
+                  </small>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="show-company-messages" checked>
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div id="senders-container">
+                <!-- Dynamic sender switches -->
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <!-- Tab Panel: Anzeige -->
+        <div role="tabpanel" id="tabpanel-anzeige" aria-labelledby="tab-anzeige" class="settings-tabpanel" hidden>
+          <!-- Visual & Layout Settings -->
+          <section class="settings-section">
+            <h3 class="settings-section-title-bordered">
+              🎨 Anzeige &amp; Schrift
+            </h3>
+
+            <div class="grid-2">
+              <div class="form-group">
+                <label for="text-size">Schriftgröße</label>
+                <select id="text-size">
+                  <option value="0.9">Klein (90%)</option>
+                  <option value="1.0" selected>Normal (100%)</option>
+                  <option value="1.2">Groß (120%)</option>
+                  <option value="1.4">Sehr groß (140%)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="speech-rate">Vorlese-Tempo</label>
+                <select id="speech-rate">
+                  <option value="0.5">Sehr langsam</option>
+                  <option value="0.65">Langsam</option>
+                  <option value="0.8" selected>Ruhig (Standard)</option>
+                  <option value="1.0">Normal</option>
+                  <option value="1.2">Schnell</option>
+                </select>
+                <small>Wie schnell vorgelesen wird. Langsamer hilft, wenn sie nachfragt, was gesagt wurde.</small>
+              </div>
+
+              <div class="form-group">
+                <label for="photo-size">Kontaktfoto-Größe</label>
+                <select id="photo-size">
+                  <option value="0.9">Kompakt (90%)</option>
+                  <option value="1.0" selected>Standard (100%)</option>
+                  <option value="1.2">Groß (120%)</option>
+                  <option value="1.4">Riesig (140%)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="toggle-group">
+              <div class="toggle-label">
+                <span>Dunkelmodus (Dark Mode)</span>
+                <small>Hoher Kontrast mit dunklem Hintergrund für empfindliche Augen</small>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="dark-mode">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </section>
+        </div>
+
+        <!-- Tab Panel: Hinweise -->
+        <div role="tabpanel" id="tabpanel-hinweise" aria-labelledby="tab-hinweise" class="settings-tabpanel" hidden>
+          <!-- Active Communication Channels & Features -->
+          <section class="settings-section">
+            <h3 class="settings-section-title-bordered">
+              🔔 Kanäle &amp; Hinweise
+            </h3>
+
+            <!-- Presets for the channel switches -->
+            <div class="presets-container" style="margin-bottom: 1rem;">
+              <div class="preset-buttons" style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+                <button type="button" class="btn btn-secondary preset-btn" data-preset="ruhig" aria-pressed="false">Ruhig</button>
+                <button type="button" class="btn btn-secondary preset-btn" data-preset="normal" aria-pressed="false">Normal</button>
+                <button type="button" class="btn btn-secondary preset-btn" data-preset="alles" aria-pressed="false">Alles an</button>
+                <span id="preset-custom-state" class="preset-custom-state" style="display: none;">Eigene Auswahl</span>
+              </div>
+              <p class="help-text" style="margin-top: 0.5rem; margin-bottom: 0.75rem;">
+                Voreinstellungen ber&uuml;hren Bezahlen, Anrufsperren und Ruhezeiten bewusst nicht &ndash; dies sind pers&ouml;nliche Entscheidungen f&uuml;r sie.
+              </p>
+            </div>
+
+            <!-- Individual channel switch customizations -->
+            <details id="channel-switches-details" class="channel-details" style="margin-bottom: 1.5rem;">
+              <summary style="font-weight: 600; cursor: pointer; padding: 0.5rem 0; min-height: 44px; display: flex; align-items: center;">Einzeln anpassen</summary>
+              <div style="padding-top: 0.5rem;">
+                <div class="toggle-group">
+                  <div class="toggle-label">
+                    <span>Nachrichten aktivieren</span>
+                    <small>Eingegangene WhatsApp, Threema oder SMS Nachrichten anzeigen</small>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="enable-messages" checked>
+                    <span class="slider"></span>
+                  </label>
+                </div>
+
+                <div class="toggle-group">
+                  <div class="toggle-label">
+                    <span>Post (E-Mail) aktivieren</span>
+                    <small>Neue E-Mails im Nur-Lesen Modus anzeigen</small>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="enable-mail" checked>
+                    <span class="slider"></span>
+                  </label>
+                </div>
+
+                <div class="toggle-group">
+                  <div class="toggle-label">
+                    <span>Post nur von Bekannten</span>
+                    <small>
+                      Aus: alle Briefe aus dem Posteingang, Unbekannte nur blass (Spam kommt nie an).
+                      Ein: nur Briefe von Adressen aus ihren Kontakten oder der Absenderliste.
+                    </small>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="mail-only-known-senders">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+
+                <div class="toggle-group">
+                  <div class="toggle-label">
+                    <span>Termine anzeigen</span>
+                    <small>Die n&auml;chsten drei Tage aus dem Google-Kalender des Telefons</small>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="enable-calendar" checked>
+                    <span class="slider"></span>
+                  </label>
+                </div>
+
+                <div class="toggle-group">
+                  <div class="toggle-label">
+                    <span>Geburtstage bei den Terminen anzeigen</span>
+                    <small>
+                      Standardmässig ein. Ausgeschaltet erscheinen Einträge wie «Anna hat Geburtstag» oder
+                      mit einem Geburtstagskuchen 🎂 nicht mehr bei den Terminen — weder auf dem
+                      Startbildschirm noch in der Terminliste. Ein «Geburtstagsfest» bleibt sichtbar.
+                    </small>
+                    <small>
+                      Im Kalender selbst wird nichts gelöscht: beim Wiedereinschalten ist alles wieder da.
+                    </small>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="show-birthdays" checked>
+                    <span class="slider"></span>
+                  </label>
+                </div>
+
+                <div class="toggle-group">
+                  <div class="toggle-label">
+                    <span>Schritte auf dem Startbildschirm zeigen</span>
+                    <small>
+                      Standardmässig ein. Zeigt ganz unten auf dem Startbildschirm die Schritte von heute (ab 3'000)
+                      und gestern an.
+                    </small>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="show-steps" checked>
+                    <span class="slider"></span>
+                  </label>
+                </div>
+
+                <div class="toggle-group">
+                  <div class="toggle-label">
+                    <span>Sanfter Hinweis (Nudge Card)</span>
+                    <small>Zeigt maximal eine wichtigste Ungelesen-Karte oben auf dem Schirm an</small>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="enable-nudge" checked>
+                    <span class="slider"></span>
+                  </label>
+                </div>
+
+                <div class="toggle-group">
+                  <div class="toggle-label">
+                    <span>Suchfeld in Nachrichten, Ansicht und Telefon</span>
+                    <small>
+                      Setzt ein Suchfeld über die Nachrichtenliste, über die Ansicht und ins Telefonbuch.
+                      Standardmässig aus: ein Suchfeld ist ein Textfeld, die Tastatur springt auf und die
+                      Liste verschwindet dahinter — für die meisten ist das nur ein Knopf mehr, den man aus
+                      Versehen drückt. Sinnvoll dort, wo viele Einträge liegen und Scrollen nicht mehr
+                      weiterhilft.
+                    </small>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="enable-search">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+
+                <div class="toggle-group">
+                  <div class="toggle-label">
+                    <span>Zeichen aussuchen statt fünf feste</span>
+                    <small>
+                      Macht aus dem letzten der fünf Gesichter unter einer Nachricht eine Tür zu allen
+                      übrigen — grau hinterlegt, mit einem Plus. Die ersten vier bleiben, wo sie sind.
+                      Standardmässig aus: fünf Gesichter sind ein Druck, eine Auswahl ist ein zweites
+                      Fenster. Sinnvoll, wenn sie öfter etwas sagen möchte, was die fünf nicht sagen —
+                      Blumen zum Geburtstag, einen Kuchen, ein Dankeschön.
+                    </small>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="enable-emoji-choice">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+
+                <div class="toggle-group">
+                  <div class="toggle-label">
+                    <span>Fotos schicken (Kamera)</span>
+                    <small>
+                      Erlaubt ihr, mit der Kamera ein Foto aufzunehmen und direkt an einen Kontakt zu schicken.
+                      Standardmässig aus: keine Kamerataste auf dem Telefon, nichts ändert sich für sie.
+                    </small>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="enable-photo-sending">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+
+                <div class="form-group" style="padding: 0.75rem 0; margin-bottom: 0;">
+                  <label for="photo-button-placement">Foto-Knopf auf dem Startbildschirm</label>
+                  <select id="photo-button-placement">
+                    <option value="card" selected>Unter der Uhrzeit (gross)</option>
+                    <option value="clock">Neben der Uhr</option>
+                    <option value="faces">Nach den Gesichtern</option>
+                    <option value="bottom">Unten &uuml;ber den Men&uuml;-Kn&ouml;pfen</option>
+                    <option value="none">Kein Foto-Knopf</option>
+                  </select>
+                </div>
+
+                <div class="toggle-group">
+                  <div class="toggle-label">
+                    <span>Kamera wechseln (Selfie) erlauben</span>
+                    <small>
+                      Zeigt in der Kamera einen Knopf zum Umschalten zwischen Vorder- und Rückkamera.
+                      Nur wirksam, wenn Fotos schicken eingeschaltet ist. Standardmässig aus.
+                    </small>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="enable-camera-switch">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+              </div>
+            </details>
+
+            <div class="toggle-group">
+              <div class="toggle-label">
+                <span>Bezahlen mit dem Telefon</span>
+                <small>Karte oben links auf dem Startbildschirm. Zeigt gr&uuml;n, sobald das Telefon wirklich zahlen kann &ndash; sonst fragt sie nach der PIN. Nur mit eingerichteter Bildschirmsperre und Google&nbsp;Wallet.</small>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="enable-wallet">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <!-- Details: Mehr zum Bezahlen -->
+            <details class="advanced" style="margin-top: 1rem;">
+              <summary>Mehr zum Bezahlen</summary>
+              <div style="padding-top: 1rem;">
+                <div class="toggle-group">
+                  <div class="toggle-label">
+                    <span>Hinweis &laquo;Karte ist bereit zum Zahlen&raquo;</span>
+                    <small>Standardm&auml;ssig ein. Gr&uuml;ner Hinweis unter der Uhr, solange die Karte zahlen kann. Ausgeschaltet zeigt nur noch die gr&uuml;ne Karte selbst, dass sie bereit ist.</small>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="show-payment-ready-notice" checked>
+                    <span class="slider"></span>
+                  </label>
+                </div>
+
+                <div class="form-group" style="padding: 0.75rem 0; margin-bottom: 0;">
+                  <label for="payment-auth-method">Bezahlen: wie sie sich ausweist</label>
+                  <select id="payment-auth-method">
+                    <option value="" selected>Wie das Telefon es vorschl&auml;gt (Standard)</option>
+                    <option value="pin">Immer die PIN</option>
+                  </select>
+                  <small class="help-text">
+                    &laquo;Immer die PIN&raquo; &ouml;ffnet direkt die Zahlentasten, ohne Fingerabdruck davor &ndash;
+                    f&uuml;r ein Telefon, dessen Fingerabdruckleser sie oft nicht erkennt.
+                  </small>
+                </div>
+              </div>
+            </details>
+          </section>
+        </div>
+
+        <!-- Tab Panel: Anrufe -->
+        <div role="tabpanel" id="tabpanel-anrufe" aria-labelledby="tab-anrufe" class="settings-tabpanel" hidden>
+          <section class="settings-section">
+            <h3 class="settings-section-title-bordered">
+              📞 Anrufe
+            </h3>
+
+            <div class="toggle-group">
+              <div class="toggle-label">
+                <span>Ruhezeiten</span>
+                <small>
+                  In diesen Stunden bleibt das Telefon dunkel und still, wenn jemand schreibt. Die
+                  Nachricht kommt trotzdem an und die Karte ist am Morgen da — es wird nur kein Ton
+                  gespielt und der Schirm nicht geweckt. Voreingestellt ist 21:00 bis 07:00. Stehen
+                  beide Zeiten gleich, gibt es gar keine Ruhezeit: das Telefon meldet sich dann rund
+                  um die Uhr.
+                </small>
+              </div>
+              <div class="quiet-hours">
+                <label for="quiet-from">Von</label>
+                <select id="quiet-from">
+                  <option value="0">00:00</option>
+                  <option value="1">01:00</option>
+                  <option value="2">02:00</option>
+                  <option value="3">03:00</option>
+                  <option value="4">04:00</option>
+                  <option value="5">05:00</option>
+                  <option value="6">06:00</option>
+                  <option value="7">07:00</option>
+                  <option value="8">08:00</option>
+                  <option value="9">09:00</option>
+                  <option value="10">10:00</option>
+                  <option value="11">11:00</option>
+                  <option value="12">12:00</option>
+                  <option value="13">13:00</option>
+                  <option value="14">14:00</option>
+                  <option value="15">15:00</option>
+                  <option value="16">16:00</option>
+                  <option value="17">17:00</option>
+                  <option value="18">18:00</option>
+                  <option value="19">19:00</option>
+                  <option value="20">20:00</option>
+                  <option value="21">21:00</option>
+                  <option value="22">22:00</option>
+                  <option value="23">23:00</option>
+                </select>
+                <label for="quiet-until">Bis</label>
+                <select id="quiet-until">
+                  <option value="0">00:00</option>
+                  <option value="1">01:00</option>
+                  <option value="2">02:00</option>
+                  <option value="3">03:00</option>
+                  <option value="4">04:00</option>
+                  <option value="5">05:00</option>
+                  <option value="6">06:00</option>
+                  <option value="7">07:00</option>
+                  <option value="8">08:00</option>
+                  <option value="9">09:00</option>
+                  <option value="10">10:00</option>
+                  <option value="11">11:00</option>
+                  <option value="12">12:00</option>
+                  <option value="13">13:00</option>
+                  <option value="14">14:00</option>
+                  <option value="15">15:00</option>
+                  <option value="16">16:00</option>
+                  <option value="17">17:00</option>
+                  <option value="18">18:00</option>
+                  <option value="19">19:00</option>
+                  <option value="20">20:00</option>
+                  <option value="21">21:00</option>
+                  <option value="22">22:00</option>
+                  <option value="23">23:00</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="toggle-group">
+              <div class="toggle-label">
+                <span>Unbekannte Anrufer blockieren</span>
+                <small>
+                  Anrufe von Nummern, die nicht im Adressbuch des Telefons stehen, werden sofort
+                  beendet — es läutet gar nicht erst. Das hält Betrugsanrufe fern. Es hält aber auch
+                  die Arztpraxis fern, die von einer anderen Leitung zurückruft, den Spitaldienst und
+                  den Handwerker. Nur einschalten, wenn das für sie die richtige Abwägung ist. Jeder
+                  beendete Anruf erscheint im Protokoll unten.
+                </small>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="block-unknown-callers">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <!-- Rarely used settings in collapsed details -->
+            <details class="advanced" style="margin-top: 1.5rem;">
+              <summary>Weitere Anruf-Einstellungen</summary>
+              <div style="padding-top: 1rem;">
+                <div class="toggle-group">
+                  <div class="toggle-label">
+                    <span>Klingelton nach einiger Zeit stummschalten</span>
+                    <small>
+                      Wie lange das Telefon bei einem eingehenden Anruf läuten soll, bevor der Ton verstummt.
+                      Der Anruf bleibt auf dem Bildschirm und kann weiterhin angenommen werden.
+                    </small>
+                  </div>
+                  <div class="quiet-hours">
+                    <select id="ring-silence-timeout">
+                      <option value="0">Aus (immer klingeln)</option>
+                      <option value="1">Nach 1 Sekunde</option>
+                      <option value="2">Nach 2 Sekunden</option>
+                      <option value="3">Nach 3 Sekunden</option>
+                      <option value="6">Nach 6 Sekunden</option>
+                      <option value="10">Nach 10 Sekunden</option>
+                      <option value="20">Nach 20 Sekunden</option>
+                      <option value="30">Nach 30 Sekunden</option>
+                      <option value="60">Nach 60 Sekunden</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="toggle-group">
+                  <div class="toggle-label">
+                    <span>Blockierte Anrufe in der Anrufliste anzeigen</span>
+                    <small>
+                      Beendete Anrufe von unbekannten Nummern werden in der Anrufliste auf dem Telefon aufgeführt.
+                    </small>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="show-blocked-calls-in-call-log">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+
+                <div class="toggle-group">
+                  <div class="toggle-label">
+                    <span>Benachrichtigung für blockierte Anrufe</span>
+                    <small>
+                      Zeigt eine Benachrichtigung auf dem Telefon an, wenn ein Anruf von einer unbekannten Nummer blockiert wurde.
+                    </small>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="notify-blocked-calls">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+
+                <div class="toggle-group">
+                  <div class="toggle-label">
+                    <span>WhatsApp-Anrufe abweisen</span>
+                    <small>
+                      WhatsApp-Anrufe können auf diesem Telefon nicht angenommen werden. Eingeschaltet
+                      werden sie sofort abgewiesen, statt in der WhatsApp-App zu läuten: Sie erscheinen als
+                      verpasster Anruf auf dem Startbildschirm, und bekannte Anrufer erhalten einmal eine
+                      automatische Nachricht, sie sollen normal auf die Telefonnummer oder über Threema
+                      anrufen. Unbekannte Anrufer erhalten keine Nachricht.
+                    </small>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="reject-whatsapp-calls">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+
+                <div class="toggle-group">
+                  <div class="toggle-label">
+                    <span>Im Ausland nur über Threema anrufen</span>
+                    <small>
+                      Ist das Telefon im Ausland (Roaming), werden Anrufe nur über Threema geführt, damit
+                      keine Roaming-Kosten entstehen. Personen ohne Threema können dann nicht angerufen
+                      werden. Notrufnummern funktionieren immer. Zu Hause ändert dieser Schalter nichts.
+                    </small>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="threema-only-when-roaming">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+
+                <div class="toggle-group">
+                  <div class="toggle-label">
+                    <span>Unbekannte Threema-Anrufer abweisen</span>
+                    <small>
+                      Anrufe von Threema-Kontakten, die nicht im Adressbuch stehen, werden ohne Klingeln
+                      abgewiesen. Niemand, den sie kennt, ruft sie über eine fremde Threema-ID an — wer das
+                      tut, ist jemand, gegen den sie sich nicht wehren kann.
+                    </small>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="block-unknown-threema-callers">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+
+                <div class="toggle-group">
+                  <div class="toggle-label">
+                    <span>Ansage, wenn ein Anruf nicht möglich ist</span>
+                    <small>
+                      Kann ein Anruf gar nicht aufgebaut werden (keine Verbindung, oder die Person ist aus
+                      dem Ausland nicht erreichbar), erscheint immer ein grosser Hinweis mit Foto.
+                      Eingeschaltet wird der Satz zusätzlich vorgelesen.
+                    </small>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="speak-call-failures">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+
+                <div class="form-group" style="padding: 0.75rem 0; margin-bottom: 0;">
+                  <label for="missed-call-hours">Verpasster Anruf: wie lange die Karte bleibt</label>
+                  <select id="missed-call-hours">
+                    <option value="0">Gar nicht anzeigen</option>
+                    <option value="1">1 Stunde</option>
+                    <option value="2">2 Stunden</option>
+                    <option value="4">4 Stunden</option>
+                    <option value="8">8 Stunden</option>
+                    <option value="24" selected>24 Stunden (Standard)</option>
+                    <option value="-1">Bis sie zur&uuml;ckruft</option>
+                  </select>
+                  <small class="help-text">
+                    Die Karte oben auf ihrem Schirm verschwindet ohnehin, sobald sie zur&uuml;ckruft.
+                    Hier steht, wie lange sie bleibt, wenn sie es nicht tut. Kurz f&uuml;r jemanden, der
+                    das Telefon st&uuml;ndlich in die Hand nimmt; &laquo;bis sie zur&uuml;ckruft&raquo;
+                    f&uuml;r jemanden, der es vielleicht erst morgen anschaut. Der Anruf selbst bleibt in
+                    jedem Fall in ihrer Anrufliste.
+                  </small>
+                </div>
+              </div>
+            </details>
+          </section>
+        </div>
+
+        <!-- Tab Panel: Gerät -->
+        <div role="tabpanel" id="tabpanel-geraet" aria-labelledby="tab-geraet" class="settings-tabpanel" hidden>
+          <section class="settings-section">
+            <h3 class="settings-section-title-bordered">
+              📱 Gerät
+            </h3>
+
+            <!-- Device Name Field -->
+            <div id="device-name-card" style="display: none; margin-bottom: 1.5rem;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="device-name" style="font-weight: 600; font-size: 1.05rem; margin-bottom: 0.5rem;">Name dieses Ger&auml;ts</label>
+                <input type="text" id="device-name" maxlength="40" placeholder="z.B. Mamas Telefon">
+                <p class="help-text" style="margin-top: 0.5rem; margin-bottom: 0;">
+                  Nur f&uuml;r Sie, in dieser Liste. Auf dem Telefon selbst erscheint der Name nirgends.
+                  Leer gelassen, steht hier das Modell, das sich das Telefon selbst gibt.
+                  Wird sofort gespeichert.
+                </p>
+              </div>
+            </div>
+
+            <!-- Bluetooth Devices Section: Bei wem & wo -->
+            <section style="margin-bottom: 1.5rem;">
+              <h4 class="settings-subsection-title">
+                📍 Bei wem &amp; wo (Bluetooth-Geräte)
+              </h4>
+              <p class="help-text" style="margin-bottom: 0.75rem;">
+                Gekoppelte und regelmässig in der Nähe gesehene Bluetooth-Geräte (z.B. Fernseher, Lautsprecher,
+                Auto-Freisprechanlage, eigene Uhr oder ein einmal gekoppeltes Telefon einer Betreuungsperson)
+                können einem <strong>Ort</strong>, einer <strong>Person</strong> oder als <strong>eigenes Gerät</strong>
+                zugeordnet werden. Die Zuordnung erscheint oben unter «Zustand des Smartphones».
+              </p>
+              <div id="bluetooth-devices-container"></div>
+              <datalist id="bluetooth-label-suggestions"></datalist>
+            </section>
+
+            <!-- Unpair Action Section -->
+            <div class="unpair-section">
+              <div>
+                <strong style="color: var(--text-main); font-size: 1rem;">Gerät trennen</strong>
+                <p class="help-text" style="margin-top: 0.25rem; margin-bottom: 0;">
+                  Entfernt die Verknüpfung zu diesem Smartphone in Ihrem Betreuer-Konto.
+                </p>
+              </div>
+              <button type="button" id="unpair-btn" class="btn btn-secondary" style="font-size: 0.85rem; padding: 0.4rem 0.85rem;">Trennen</button>
+            </div>
+
+            <!-- Device Reliability & Battery Settings (Samsung / Android OEM) -->
+            <section style="margin-bottom: 1.5rem;">
+              <h4 class="settings-subsection-title">
+                🔋 Zuverlässigkeit &amp; Akku (Samsung / One UI)
+              </h4>
+              <p class="help-text" style="margin-bottom: 0.75rem;">
+                Damit WhatsApp, Threema und der Statusbericht zuverlässig verbunden bleiben, wenn das Smartphone länger ungenutzt auf dem Tisch liegt:
+              </p>
+              <ul class="battery-advice-list">
+                <li><strong>Apps, die nie im Standby sind:</strong> Auf dem Smartphone öffnen: <em>Einstellungen &rarr; Akku &rarr; Grenzen der Hintergrundnutzung &rarr; Apps, die nie im Standby sind</em> &rarr; <code>gentle connection</code> hinzufügen.</li>
+                <li><strong>Akkuoptimierung ignorieren:</strong> Sicherstellen, dass die Akkunutzung für <code>gentle connection</code> auf <em>Nicht eingeschränkt</em> steht.</li>
+                <li><strong>Energiesparmodus:</strong> Sollte Hintergrunddaten und Synchronisierung nicht einschränken.</li>
+              </ul>
+            </section>
+
+            <!-- Pairing Card (shown in Gerät tab when device exists, or in overview if no device) -->
+            <div id="pairing-card" class="card" style="display: none; margin-top: 1.5rem;">
+              <h2 class="card-title">📱 Neues Gerät per Kopplungscode hinzufügen</h2>
+              <p style="color: var(--text-muted); margin-bottom: 1.25rem;">
+                Tippen Sie auf dem Smartphone fünfmal schnell auf die Uhrzeit, um den 6-stelligen Kopplungscode abzulesen. Am einfachsten ist es, dort direkt auf «Betreuungs-Website öffnen» zu tippen — dann wird der Code automatisch übernommen.
+              </p>
+
+              <form id="pairing-form">
+                <div class="form-group">
+                  <label for="pairing-code">Kopplungscode (6-stellig)</label>
+                  <input type="text" id="pairing-code" placeholder="z.B. A1B2C3" maxlength="6" style="text-transform: uppercase; font-family: monospace; letter-spacing: 2px;" required>
+                  <div class="help-text">Der Code ist 10 Minuten lang gültig.</div>
+                </div>
+
+                <button type="submit" id="pair-device-btn" class="btn btn-primary" style="width: 100%;">Gerät verknüpfen</button>
+              </form>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <!-- Save Status Pill (bottom of viewport, unobtrusive) -->
+    <div id="save-status-pill" class="status-pill" style="display: none;" role="status" aria-live="polite"></div>
+
+    <footer class="footer-links">
+      <p>gentle connection &bull; <a href="about.html">Über die App</a> &bull; <a href="privacy.html">Datenschutz &amp; Privacy</a></p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

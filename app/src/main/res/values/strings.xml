@@ -1,0 +1,690 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">gentle connection</string>
+    <string name="nudge_message_from">%s wrote a message</string>
+    <string name="nudge_message_wrote">%1$s wrote: %2$s</string>
+    <string name="nudge_missed_call">Missed call</string>
+    <string name="nudge_missed_call_from">Missed call from %s</string>
+    <!-- The nudge card's button. "View" moved to the Look tab, and one verb pointing at two
+         different places is one verb too many. "Open" is also the truer word: it opens the
+         message she has been told about. -->
+    <string name="nudge_action">Open</string>
+    <string name="favorites_title">Favorite Contacts</string>
+    <string name="call_action">Call %s</string>
+    <string name="calling">Calling %s…</string>
+    <string name="messages_title">Messages</string>
+    <string name="no_messages">No new messages</string>
+    <string name="messages_not_yet_written">No messages yet with these people. Tap someone to write to them.</string>
+    <string name="unread_messages_count">%d new messages</string>
+    <string name="reaction_heart">Send heart</string>
+    <string name="reaction_thumbs_up">Send thumbs up</string>
+    <string name="reaction_smile">Send smile</string>
+    <string name="reaction_pray">Send thanks</string>
+    <string name="reaction_laugh">Send laugh</string>
+    <string name="reaction_sent">Reaction sent</string>
+    <string name="reaction_not_sent">Could not be sent</string>
+    <string name="reaction_prefix">Reaction: %s</string>
+    <!-- What read-aloud says about the marks on a message, after the words themselves. Hers
+         comes last though the bubble draws it first: what she is listening for at the end of a
+         message is whether she already answered it. See SpokenReactions. -->
+    <string name="reaction_read_aloud_others">Reaction: %1$s.</string>
+    <string name="reaction_read_aloud_own">You answered with %1$s.</string>
+    <!-- The heading of the chooser behind the last slot, where a caregiver has turned it on.
+         "Choose" rather than "Emoji": the word for these on this phone is what they look like. -->
+    <string name="emoji_choice_title">Choose a face</string>
+    <string name="reply_placeholder">Write a message…</string>
+    <string name="send_reply">Send</string>
+    <string name="reply_open">Answer</string>
+    <string name="reply_cancel">Back</string>
+    <!-- One letter out of the mail. "Mail" is the pile, a "letter" is one of them — the same two
+         words the help text and the read-aloud line already use, and the same split German has
+         between "Post" and "Brief". -->
+    <string name="mail_detail_title">Letter from %s</string>
+    <string name="back_to_home">Back to Home</string>
+    <string name="close">Close</string>
+    <string name="time_just_now">Just now</string>
+    <string name="time_minutes_ago">%d min ago</string>
+    <string name="time_hours_ago">%d hrs ago</string>
+    <string name="time_yesterday">Yesterday</string>
+    <string name="day_today">Today</string>
+    <string name="day_tomorrow">Tomorrow</string>
+
+    <!-- What is coming, under the clock on her home screen. "Appointments", never "Calendar":
+         she is being shown what she has on, not an application to go into. -->
+    <!-- Written out rather than left blank. A free day is a fact, and the question "is there
+         anything today?" deserves an answer on the screen. -->
+    <string name="calendar_nothing_today">Nothing on today</string>
+    <!-- Shown under "Nothing on today" when there is an appointment further ahead. -->
+    <string name="calendar_next">Next: %1$s</string>
+    <!-- The day and then the time: the day is what decides whether the rest matters this morning. -->
+    <string name="calendar_when">%1$s, %2$s</string>
+    <!-- An appointment somebody entered without naming it. -->
+    <string name="appointment_untitled">Appointment</string>
+    <!-- Content description for the location pin icon next to an appointment's place. -->
+    <string name="appointment_location">Location</string>
+    <!-- The full appointments screen and date formatting. -->
+    <string name="appointments_title">Appointments</string>
+    <string name="appointments_empty">Nothing planned</string>
+    <string name="appointment_show">Show appointment details</string>
+    <string name="appointment_spoken">%1$s. %2$s. %3$s</string>
+    <string name="calendar_until">Until %1$s</string>
+    <string name="calendar_range">%1$s – %2$s</string>
+    <string name="calendar_far">%1$s · %2$s</string>
+    <string name="in_days">in %d days</string>
+    <string name="in_weeks">in %d weeks</string>
+    <string name="in_months">in %d months</string>
+    <!-- Naming several people. Never the word "group": several people are several people. -->
+    <string name="group_and">and</string>
+    <string name="group_others">%d others</string>
+    <string name="group_one_other">1 other</string>
+    <!-- Spoken by the screen reader on the faces at the top of a group conversation: what pressing them does. -->
+    <string name="group_show_members">show everybody by name</string>
+    <!-- One person out of several. Her name is in the button because the button is the question:
+         there is no second "shall I ring her?" after it. -->
+    <string name="group_member_ring">Ring %1$s</string>
+    <string name="group_member_write">Write to %1$s</string>
+    <!-- Spoken by the screen reader on a person in the list of everybody: what pressing them does. -->
+    <string name="group_member_choose">ring or write to %1$s</string>
+    <string name="caregiver_settings_paired">Paired</string>
+    <string name="caregiver_settings_unpaired">Not paired</string>
+    <string name="caregiver_pairing_code">Pairing code: %s</string>
+    <string name="read_aloud">🔊 Read aloud</string>
+    <!-- On the same button while the voice is reading: what pressing it does now. The same word
+         as voice_message_stop, because to her it is the same act. -->
+    <string name="read_aloud_stop">■ Stop</string>
+    <!-- The way back from a magnified screen. Names the result she wants, not the gesture she
+         made: she may have no idea she pinched anything. -->
+    <string name="zoom_reset">↺ Normal size</string>
+    <!-- The way back from the full-screen photo viewer. One large, unmistakable key at the
+         bottom of the screen, matching the zoom reset key. -->
+    <string name="photo_viewer_close">← Back</string>
+    <!-- A voice message. Says what pressing it does, not what the file is: "audio message" is
+         a description of a format, "Listen" is a description of what happens. -->
+    <string name="voice_message_play">▶ Listen</string>
+    <string name="voice_message_stop">■ Stop</string>
+    <!-- A film. "Watch" for the same reason the voice message says "Listen": it names what
+         happens when she presses it. Deliberately not "Play video", which names a file and a
+         verb she associates with a machine. There is no matching stop control — the film has a
+         screen of its own, and that screen closes the way every other one does. -->
+    <string name="video_message_play">▶ Watch</string>
+    <!-- How long the film runs, under the button that starts it, so that pressing it is not a
+         decision made blind. In words rather than as "1:47", which is a convention to decode
+         before it is a fact — see FilmLength for why the precision is spent on that instead. -->
+    <plurals name="video_message_length_seconds">
+        <item quantity="one">%1$d second</item>
+        <item quantity="other">%1$d seconds</item>
+    </plurals>
+    <plurals name="video_message_length_minutes">
+        <item quantity="one">%1$d minute</item>
+        <item quantity="other">%1$d minutes</item>
+    </plurals>
+    <string name="nav_home">Home</string>
+    <string name="nav_call">Call</string>
+    <string name="nav_message">Message</string>
+    <!-- The fourth button. It used to say "Mail" and led to a screen that has said "No mail"
+         since the day it shipped: no mailbox has ever been connected. It now leads to
+         everything that arrives which she can only look at — the pictures her family posts,
+         and letters if a mailbox is ever set up. Named for what she does with all of it,
+         because no single noun covers both without lying about half of them. The same rule
+         as "Listen" under a voice message. -->
+    <string name="nav_mail">View</string>
+    <string name="write_dialog_title">✍️ Who would you like to write to?</string>
+    <string name="write_no_recipients">There is nobody to write to yet.</string>
+    <string name="call_dialog_title">📞 Who would you like to call?</string>
+    <string name="pairing_dialog_title">Pair Device</string>
+    <string name="pairing_dialog_instruction">Pairing code for caregiver:</string>
+    <string name="pairing_dialog_validity">This code is valid for 10 minutes.</string>
+    <string name="call_not_possible">That is not possible right now</string>
+    <string name="call_failed_not_from_abroad">%1$s can\'t be called from abroad.</string>
+    <string name="call_failed_no_connection">No connection is possible right now. Please try again later.</string>
+    <string name="partners_title">People</string>
+    <string name="action_call">Call</string>
+    <string name="threema_import_title">Import Threema Backup</string>
+    <string name="threema_import_select_file">Select Backup File</string>
+    <string name="threema_import_file_selected">File selected: %s</string>
+    <string name="threema_import_password_label">Backup Password</string>
+    <string name="threema_import_start">Import</string>
+    <string name="threema_import_success">Backup imported successfully.</string>
+    <string name="threema_import_wrong_password">Wrong password. Please try again.</string>
+    <string name="threema_import_error">Import failed: %s</string>
+    <string name="threema_key_title">Threema Account Credentials</string>
+    <string name="threema_id_label">Threema ID</string>
+    <string name="threema_key_label">Client Key (Hex)</string>
+    <string name="threema_key_save">Save Credentials</string>
+    <string name="threema_key_saved">Threema credentials saved.</string>
+    <string name="threema_status_connected">Connected</string>
+    <string name="threema_status_connecting">Connecting…</string>
+    <string name="threema_status_disconnected">Not connected</string>
+    <string name="threema_status_failed">Not connected: %s</string>
+    <!-- Threema unified section and account transfer (export, import, unlink) -->
+    <string name="threema_section_title">Threema</string>
+    <string name="threema_section_account_title">Account &amp; Credentials</string>
+    <string name="threema_current_id">Current Threema ID: %s</string>
+    <string name="threema_no_identity">No Threema account configured on this phone.</string>
+    <string name="threema_export_account">Export Account</string>
+    <string name="threema_export_account_instruction">Write down this backup code and password now. The password is never saved and cannot be recovered.</string>
+    <string name="threema_export_account_backup_label">Backup Code</string>
+    <string name="threema_export_account_password_label">Backup Password</string>
+    <string name="threema_export_account_no_identity">Cannot export: no Threema account is configured.</string>
+    <string name="threema_export_account_failed">Account export failed: %s</string>
+    <string name="threema_restore_account_title">Restore Account from Backup</string>
+    <string name="threema_restore_account_backup_label">Backup Code</string>
+    <string name="threema_restore_account_password_label">Password</string>
+    <string name="threema_restore_account_button">Restore Account</string>
+    <string name="threema_restore_account_unchanged">Account %s is already configured on this phone. Nothing changed.</string>
+    <string name="threema_restore_account_success">Threema account %s restored successfully.</string>
+    <string name="threema_restore_account_failed">Restore failed: %s</string>
+    <string name="threema_restore_replace_title">Replace existing account?</string>
+    <string name="threema_restore_replace_message">The backup contains account %1$s, but this phone currently has account %2$s. Do you want to replace it?</string>
+    <string name="threema_restore_replace_confirm">Replace Account</string>
+    <string name="threema_unlink_account">Unlink Account</string>
+    <string name="threema_unlink_confirm_title">Unlink Threema Account</string>
+    <string name="threema_unlink_confirm_message">Her Threema account credentials will be removed from this phone. Her messages will remain on the phone.</string>
+    <string name="threema_unlink_confirm_button">Unlink Account</string>
+    <string name="threema_unlink_success">Threema account removed from this phone.</string>
+    <string name="threema_unlink_none">No Threema account was configured on this phone.</string>
+    <string name="threema_section_messages_title">Messages &amp; Backup</string>
+    <string name="threema_export_messages_title">Export Messages</string>
+    <string name="threema_export_messages_button">Export Messages as ZIP</string>
+    <string name="threema_export_messages_success">Messages exported. Write down this password to decrypt the backup:</string>
+    <string name="threema_export_messages_password_note">This password is not stored anywhere and cannot be recovered.</string>
+    <string name="threema_export_messages_failed">Message export failed: %s</string>
+    <string name="threema_import_success_count">Backup imported: %1$d messages added (%2$d in backup).</string>
+    <string name="threema_import_success_unchanged">Backup imported: all %d messages were already on this phone.</string>
+    <string name="threema_import_account_restored">The Threema account %s was in this backup and is now set up on this phone.</string>
+    <string name="threema_nickname_label">The name her messages arrive under</string>
+    <string name="threema_nickname_save">Save name</string>
+    <string name="threema_nickname_saved">Her messages will arrive under this name from now on.</string>
+    <string name="threema_section_contacts_title">Threema Directory Sync</string>
+    <string name="cancel">Cancel</string>
+    <!-- The call screen's words. There used to be a second, unused set of these (incoming_call_title,
+         answer_call, hangup_call, call_in_progress) saying the same things: two copies of one
+         sentence, one of which nobody would have thought to translate. -->
+    <string name="call_incoming">Incoming Call</string>
+    <string name="call_outgoing">Ringing…</string>
+    <string name="call_connecting">Connecting…</string>
+    <string name="call_active">Active Call</string>
+    <string name="call_ended">Call Ended</string>
+    <string name="call_answer">Answer</string>
+    <string name="call_hangup">End Call</string>
+    <string name="call_audio_earpiece">Earpiece</string>
+    <string name="call_audio_loudspeaker">Speaker</string>
+    <string name="call_audio_headset">Headphones</string>
+    <string name="call_audio_bluetooth">Bluetooth</string>
+    <string name="call_missed_notification_title">Missed call from %1$s</string>
+    <string name="call_missed_notification_text">Tap for details</string>
+    <string name="call_missed_action_callback">Call back</string>
+    <string name="call_blocked_notification_title">Blocked call from %1$s</string>
+    <string name="call_blocked_notification_text">Not in the address book, so the phone did not ring</string>
+    <string name="calling_announcement">Calling %1$s</string>
+    <string name="call_silence">Silence</string>
+
+    <!--
+        A caller who withheld their number. Not "Unknown" on its own: unknown reads as "the
+        telephone does not know", when what it means is that somebody chose not to say. The
+        difference decides whether she picks up.
+    -->
+    <string name="call_unknown_caller">Number withheld</string>
+
+    <!-- Named in Android's own notification settings, where a caregiver may go looking. -->
+    <string name="call_channel_name">Telephone calls</string>
+    <!-- The channel for a call already in progress; quieter than the one that rings. -->
+    <string name="call_channel_ongoing_name">Calls in progress</string>
+    <string name="call_channel_blocked_name">Blocked calls</string>
+    <string name="mail_read_aloud_format">Letter from %1$s. Subject: %2$s. %3$s</string>
+    <string name="quote_read_aloud_format">Answering %1$s: %2$s. %3$s</string>
+    <string name="mail_account_title">Her Gmail (read-only)</string>
+    <string name="mail_account_address_label">Email Address</string>
+    <string name="mail_account_connect">Connect Gmail</string>
+    <string name="mail_account_connected">Gmail connected, read-only. Her post arrives within a few minutes.</string>
+    <string name="mail_account_connect_failed">Gmail could not be connected. Is the address signed in on this phone, and was access allowed?</string>
+    <string name="mail_account_clear">Remove Account</string>
+    <string name="mail_account_cleared">Mail account removed.</string>
+    <string name="mail_allowlist_title">Mail Allowlist</string>
+    <string name="mail_allowlist_instruction">Addresses allowed to send mail to her screen (in addition to contacts):</string>
+    <string name="mail_allowlist_add_label">Add Email Address</string>
+    <string name="mail_allowlist_add_button">Add</string>
+    <string name="mail_allowlist_empty">No additional addresses in allowlist.</string>
+    <string name="mail_allowlist_remove">Remove</string>
+    <!-- The caregiver's error log. Behind the five-tap gesture, never on her screen: every one
+         of these reports a fault to somebody who can act on it, which she cannot. -->
+    <string name="caregiver_log_title">What did not work</string>
+    <string name="caregiver_log_empty">Nothing has gone wrong since this was last cleared.</string>
+    <string name="caregiver_log_show_actions">Also show %1$d caregiver actions</string>
+    <string name="caregiver_log_hide_actions">Show faults only</string>
+    <string name="caregiver_log_no_faults">Nothing has gone wrong.</string>
+    <string name="caregiver_log_someone">someone</string>
+    <string name="caregiver_log_message_not_sent">A message to %1$s was not sent.</string>
+    <string name="caregiver_log_group_part_sent">A message to %1$s reached only %2$d of %3$d people, so it is shown to her as not sent.</string>
+    <string name="caregiver_log_group_membership_unknown">She cannot answer %1$s: nobody has told this phone who is in it. It will stay unanswerable until someone sends a message to the group from Threema.</string>
+    <string name="caregiver_log_group_no_longer_member">She cannot answer %1$s: she is no longer in it.</string>
+    <string name="caregiver_log_group_nobody_left">She cannot answer %1$s: there is nobody in it but her.</string>
+    <string name="caregiver_log_messenger_connection_failed">The messenger could not connect, so messages can neither arrive nor be sent.</string>
+    <string name="caregiver_log_contact_sync_failed">Checking which contacts can be reached by messenger failed. Nobody became unreachable, but no new person became reachable either.</string>
+    <string name="caregiver_log_contacts_not_understood">%1$d of %2$d contacts have a telephone number this phone could not read, so they were never looked up.</string>
+
+    <!--
+        Says what was done and who asked for it, because the person reading this log is often not
+        the person who turned the switch on, and "a call was blocked" alone reads as a fault.
+    -->
+    <string name="caregiver_log_call_from_stranger_ended">A call from a number that is not in her address book was ended without ringing, because blocking unknown callers is switched on. The number is in the telephone\'s own list of calls.</string>
+    <string name="caregiver_log_threema_call_from_stranger_ended">A Threema call from an unknown contact was ended without ringing, because blocking unknown Threema callers is switched on.</string>
+    <string name="caregiver_log_call_failed_abroad_without_threema">%1$s could not be called: the phone is roaming and has no Threema address for them.</string>
+    <string name="caregiver_log_call_failed_no_connection">%1$s could not be called: no cellular voice service and the messenger is not connected.</string>
+    <string name="caregiver_log_mms_dropped_unsupported">A picture message (MMS) arrived over the mobile network but could not be received: MMS is not supported on this phone. Please ask the sender to share photos via WhatsApp, Threema, or email instead.</string>
+    <string name="caregiver_log_messages_lost_on_arrival">Some messages arrived but could not be saved and were lost. This happens after a long time without an internet connection. Please ask whoever wrote to send their message again.</string>
+    <string name="caregiver_log_whatsapp_call_unanswered">A WhatsApp call came in and could not be answered: WhatsApp calls do not arrive on this phone. Callers she knows are automatically asked to ring her telephone number (or on Threema) instead.</string>
+    <string name="caregiver_log_mail_access_lost">Her Gmail can no longer be read, so no new letters arrive. On this phone, open the caregiver screen and tap “Connect Gmail” again.</string>
+    <string name="caregiver_log_sms_not_stored">An incoming text message (SMS) could not be saved to the phone and was lost. Please ask the sender to write again.</string>
+    <string name="caregiver_log_repeated">happened %1$d times</string>
+    <string name="caregiver_log_support_opened_not_confirmed">\"Something is strange\" button opened, not confirmed</string>
+    <string name="caregiver_log_restlessness_detected">Restlessness noticed</string>
+    <string name="support_button_description">Something is strange</string>
+    <string name="support_confirm_question">Something is strange? Look at it together with %1$s?</string>
+    <string name="support_default_group_name">your family</string>
+    <string name="support_confirm_yes">Yes, look at it together</string>
+    <string name="support_confirm_no">No</string>
+    <string name="support_status_sent">%1$s has been told</string>
+    <string name="support_status_sent_many">%1$s have been told</string>
+    <string name="support_names_and">and</string>
+
+    <!-- The messages the help button sends to the family. Her own voice: every one of them also
+         lands in her own thread with that person and she reads it there. -->
+    <string name="support_msg_alert_headline">Something is strange. Shall we look at it together?</string>
+    <string name="support_msg_alert_pressed">I pressed the \"something is strange\" button at %1$s.</string>
+    <string name="support_msg_accuracy">±%1$s m</string>
+    <string name="support_msg_age_minutes">%1$s min ago</string>
+    <string name="support_msg_age_one_minute">1 min ago</string>
+    <string name="support_msg_phone_line">My phone: %1$s</string>
+    <string name="support_msg_battery">Battery %1$s %%</string>
+    <string name="support_msg_charging">charging</string>
+    <string name="support_msg_roaming">roaming</string>
+    <string name="support_msg_sent_to_names">My phone sends this automatically to %1$s.</string>
+    <string name="support_msg_sent_to_group">My phone sends this automatically to everyone in \"%1$s\".</string>
+    <string name="support_msg_group_fallback">family</string>
+    <string name="support_msg_closing">Whoever takes care of it: reply \"ok\" or 👍 or call me – the others will then be told.</string>
+    <string name="support_msg_claim_reply">%1$s is looking at it together with me: what was strange at %2$s.</string>
+    <string name="support_msg_claim_call">%1$s spoke with me at %2$s and is looking at it together with me: what was strange at %3$s.</string>
+    <string name="support_msg_second_claim">%1$s is already on it (since %2$s).</string>
+    <string name="support_msg_location_follow_up">I am here, more precisely: %1$s%2$s</string>
+    <!-- SMS: at most two GSM-7 segments and no emoji, so no ± and no dash. -->
+    <string name="support_sms_alert">Something is strange. Shall we look at it together? I pressed the button at %1$s.</string>
+    <string name="support_sms_location">Location: %1$s%2$s.</string>
+    <string name="support_sms_accuracy">%1$sm</string>
+    <string name="support_sms_age_minutes">%1$s min</string>
+    <string name="support_sms_age_one_minute">1 min</string>
+    <string name="support_sms_battery">Battery %1$s%%</string>
+    <string name="support_sms_closing">My phone sends this automatically. Reply ok or call me.</string>
+    <string name="support_network_none">no internet</string>
+    <string name="support_network_wifi">Wi-Fi</string>
+    <string name="support_network_mobile">mobile data</string>
+    <string name="support_network_other">internet</string>
+    <string name="support_status_read">%1$s has read it</string>
+    <string name="support_status_claimed">%1$s is looking at it with you</string>
+    <string name="support_status_sending">Letting them know…</string>
+    <string name="support_status_sending_to">Message going to %1$s…</string>
+    <string name="support_status_waiting_hint">Whoever can first will get in touch with you.</string>
+    <string name="support_status_trying">The phone keeps trying</string>
+    <string name="support_status_read_aloud">Read aloud</string>
+    <string name="support_status_back">Back</string>
+    <string name="support_status_re_alert">Let them know again</string>
+    <!-- The language of the strings in THIS file. Read by TtsManager so the voice always
+         matches the text Android actually resolved. Keep one per values-* directory. -->
+    <string name="tts_language_tag" translatable="false">en</string>
+    <string name="mail_unknown_sender">Unknown sender</string>
+    <string name="message_unknown_sender">Someone you know</string>
+    <string name="phonebook_title">Contacts</string>
+    <string name="phonebook_rang">Called you</string>
+    <string name="phonebook_empty">No contacts yet.</string>
+    <!-- A person with no name we can show: an identity nobody has a contact for. -->
+    <string name="person_unknown">Someone</string>
+    <!-- Her own message, previewed in the list of conversations. -->
+    <string name="message_preview_yours">Your message: %s</string>
+    <!-- A group row is titled by the several people, so the words under it name who wrote them. -->
+    <string name="message_preview_theirs">%1$s: %2$s</string>
+    <!-- Read aloud in a group: who said it comes first, or she hears words with no author. -->
+    <string name="group_read_aloud_format">%1$s writes: %2$s</string>
+    <!-- Label for her own quoted message inside a citation card. -->
+    <string name="quote_your_message">Your message</string>
+    <string name="phonebook_search_label">Search for a name</string>
+    <string name="phonebook_search_clear">Clear</string>
+    <string name="phonebook_no_match">Nobody by that name.</string>
+    <string name="call_confirm_question">Shall I ring %s?</string>
+    <string name="call_confirm_yes">Yes, ring</string>
+    <string name="call_confirm_no">Not now</string>
+    <!-- The same question in the other direction, and deliberately not "Do you really want to
+         hang up?" — "really" tells her she may have got it wrong, and she has not. -->
+    <string name="call_hangup_confirm_question">Shall I end the call with %s?</string>
+    <string name="call_hangup_confirm_yes">Yes, end it</string>
+    <string name="call_hangup_confirm_no">Keep talking</string>
+    <!-- The keys. "Keypad" rather than "Dialler": one of them is the thing on the screen and the
+         other is a word for an app. -->
+    <string name="keypad_title">Keypad</string>
+    <string name="keypad_placeholder">Type a number</string>
+    <string name="keypad_call">Ring this number</string>
+    <string name="keypad_delete">Delete the last digit</string>
+    <!-- Never "Add contact": what she has in front of her is a number, and what happens to it is
+         that the telephone keeps it. -->
+    <string name="keypad_save_number">Keep this number</string>
+    <!-- The record of calls. "Calls", not "Call history" or "Recents": it is the list of calls. -->
+    <string name="recent_calls_title">Calls</string>
+    <string name="recent_calls_empty">No calls yet.</string>
+    <!-- Said instead of "no calls" when the telephone will not let the app look. The difference
+         matters to whoever set the phone up; to her both simply mean there is nothing here. -->
+    <string name="recent_calls_unavailable">This telephone is not showing its calls.</string>
+    <string name="call_direction_missed">Missed call</string>
+    <string name="call_direction_incoming">Rang you</string>
+    <string name="call_direction_outgoing">You rang</string>
+    <string name="call_direction_blocked">Blocked</string>
+    <!-- The phone answering "where are you?" from her watch. Said as the phone, because whoever
+         reads it is holding the thing that was lost. -->
+    <string name="find_phone_title">Here I am!</string>
+    <string name="find_phone_stop">Stop</string>
+    <!-- The last row of a home-screen section that is holding some back. Named by destination:
+         two identical "More" buttons sat on one screen leading to two different places, and
+         which one she had pressed was only discoverable by arriving somewhere. Still no count —
+         "12 more" is a number to read and then to feel something about. -->
+    <string name="show_more_people">More people</string>
+    <string name="show_more_messages">More messages</string>
+    <string name="show_more_appointments">More appointments</string>
+    <string name="open_appointment">Show this appointment in the list</string>
+    <!-- What arrived, when it is not words: a photograph, a voice, a film. Both message paths put
+         a bracketed German token in the text itself — "[Foto]" showed up in the middle of an
+         English screen — so the token is translated here, at the moment it is drawn, and the
+         brackets (a developer's punctuation) are gone. -->
+    <string name="attachment_photo">Photo</string>
+    <string name="attachment_voice">Voice message</string>
+    <string name="attachment_video">Video</string>
+    <string name="attachment_location">Location</string>
+    <string name="attachment_file">File</string>
+    <string name="attachment_poll">Poll</string>
+    <string name="attachment_contact">Contact</string>
+    <string name="attachment_sticker">Sticker</string>
+    <string name="attachment_message">Message</string>
+    <string name="attachment_other">Attachment</string>
+    <string name="caregiver_count_none">No one is looking after this phone yet.</string>
+    <string name="caregiver_portal_open">Open the caregiver website</string>
+    <string name="caregiver_contacts_title">Contacts on Threema</string>
+    <string name="caregiver_contacts_hint">Checks which of her contacts can be reached on Threema. This is not automatic: Threema refuses the request if it is asked too often, and nothing on her screen shows when that has happened.</string>
+    <string name="caregiver_contacts_sync">Check contacts now</string>
+    <string name="caregiver_contacts_running">Checking…</string>
+    <string name="caregiver_contacts_done">%1$d of %2$d contacts can be reached on Threema.</string>
+    <string name="caregiver_contacts_failed">Threema did not answer. It refuses repeated checks — try again in an hour.</string>
+    <string name="caregiver_contacts_too_soon">Checked recently. Possible again at %1$s.</string>
+    <string name="caregiver_remove_all">Remove everyone\'s access</string>
+    <string name="caregiver_remove_all_title">Remove everyone\'s access?</string>
+    <string name="caregiver_remove_all_message">Nobody will be able to see or change this phone from the caregiver website any more. Everybody who should keep looking after it pairs again with a new code.</string>
+    <string name="caregiver_remove_all_confirm">Remove access</string>
+    <plurals name="caregiver_count">
+        <item quantity="one">%1$d person looks after this phone.</item>
+        <item quantity="other">%1$d people look after this phone.</item>
+    </plurals>
+    <string name="whatsapp_title">WhatsApp</string>
+    <string name="whatsapp_number_label">Her telephone number</string>
+    <string name="whatsapp_number_help">The number of the WhatsApp account on this phone, written internationally (e.g. +41 79 123 45 67).</string>
+    <string name="whatsapp_request_code">Request code</string>
+    <string name="whatsapp_code_instruction">In WhatsApp on this phone: Settings → Linked devices → Link a device → “Link with phone number instead”. Then enter this code:</string>
+    <string name="whatsapp_unlink">Unlink WhatsApp</string>
+    <string name="whatsapp_state_not_linked">Not linked. Nothing from WhatsApp reaches her.</string>
+    <string name="whatsapp_state_offline">Linked, but not connected at the moment.</string>
+    <string name="whatsapp_state_live">Linked and connected.</string>
+    <!-- Sent to whoever rang her on WhatsApp, under her name, so it says outright that a machine wrote it. -->
+    <string name="whatsapp_call_notice">Automatic reply from this phone: WhatsApp calls do not arrive here and cannot be answered. Please ring the telephone number instead.</string>
+    <!-- The same, on a phone that also has Threema set up, which she can answer. -->
+    <string name="whatsapp_call_notice_threema">Automatic reply from this phone: WhatsApp calls do not arrive here and cannot be answered. Please ring the telephone number normally or call on Threema instead.</string>
+    <!-- Several people nobody has named, when the count is genuinely all we know — see the rule
+         above group_and: never the word "group". This used to read "Group of %1$d people", which
+         broke that rule on the one path (WhatsApp) that cannot name the people instead. -->
+    <string name="group_several_people">%1$d people</string>
+    <string name="whatsapp_error">WhatsApp: %1$s</string>
+    <string name="whatsapp_request_new_code">Request a new code</string>
+    <string name="whatsapp_code_expires">The code is valid for about three minutes. WhatsApp asks for a fingerprint or PIN first — if the code expires, just request a new one here.</string>
+    <string name="messenger_service_title">gentle connection</string>
+    <string name="messenger_service_text">Messages can arrive.</string>
+    <!-- The notice that wakes her phone when somebody writes. Its title is nudge_message_from,
+         the same sentence the card on her home screen uses. -->
+    <string name="attention_channel">Somebody wrote</string>
+    <string name="attention_channel_description">Lets the phone light up and make a sound when somebody writes to you.</string>
+    <string name="attention_body">Press to read it</string>
+    <string name="attention_body_missed_call">Press to see it</string>
+    <string name="messenger_service_channel">Connection</string>
+    <string name="messenger_service_channel_description">Keeps the connection open so messages can arrive.</string>
+    <!-- The Look screen: everything that arrives which she can only look at. -->
+    <string name="look_title">View</string>
+    <string name="look_empty">Nothing to look at yet</string>
+    <!-- A picture somebody posted to everybody. Never "sent you": nobody sent it to her, and
+         saying so would be the phone stating something false about her family. -->
+    <plurals name="status_picture_count">
+        <item quantity="one">%1$d picture</item>
+        <item quantity="other">%1$d pictures</item>
+    </plurals>
+    <string name="status_posted_picture">%s posted a picture</string>
+    <string name="status_posted">%s posted something</string>
+    <!-- What came with a letter: a photograph, or a PDF drawn as its pages. Never "attachment
+         opens in another app" — there is no other app on this phone she is expected to know. -->
+    <string name="letter_attachments_heading">Sent with it</string>
+    <plurals name="letter_attachments_spoken">
+        <item quantity="one">One thing came with this letter. It is shown underneath.</item>
+        <item quantity="other">%1$d things came with this letter. They are shown underneath.</item>
+    </plurals>
+    <!-- Spoken and shown when a status is opened. Same shape as mail_read_aloud_format, and it
+         still says "posted", never "sent you". -->
+    <string name="status_read_aloud_format">%1$s posted this. %2$s</string>
+    <string name="show_more_look">More to look at</string>
+    <string name="search_label">Search</string>
+    <string name="search_clear">Clear</string>
+    <string name="search_nothing_found">Nothing found</string>
+
+    <!-- Advanced Mode (Caregiver on-device diagnostics and actions) -->
+    <string name="advanced_mode_band_text">Advanced mode – tap to exit</string>
+    <string name="advanced_mode_title">Advanced Mode</string>
+    <string name="advanced_mode_hint">Unlocks technical details, deletion tools, and direct caregiver actions. Automatically turns off after 5 minutes of inactivity.</string>
+    <string name="advanced_mode_switch_on">Enabled</string>
+    <string name="advanced_mode_switch_off">Disabled</string>
+
+    <!-- Advanced Actions Sheet Titles -->
+    <string name="advanced_sheet_title_message">Message Details</string>
+    <string name="advanced_sheet_title_call">Call Details</string>
+    <string name="advanced_sheet_title_chat">Conversation Details</string>
+    <string name="advanced_sheet_title_contact">Contact Details</string>
+    <string name="advanced_sheet_title_mail">Mail Details</string>
+
+    <!-- Advanced Sheet Info Block Labels -->
+    <string name="advanced_info_date_time">Date &amp; Time</string>
+    <string name="advanced_info_transport">Transport</string>
+    <string name="advanced_info_channel">Channel</string>
+    <string name="advanced_info_sender_id">Sender ID</string>
+    <string name="advanced_info_direction">Direction</string>
+    <string name="advanced_info_direction_incoming">Incoming</string>
+    <string name="advanced_info_direction_outgoing">Outgoing</string>
+    <string name="advanced_info_send_state">Send State</string>
+    <string name="advanced_info_group">Group</string>
+    <string name="advanced_info_duration">Duration</string>
+    <string name="advanced_info_number">Number</string>
+    <string name="advanced_info_participants">Participants</string>
+    <string name="advanced_info_message_count">Message Count</string>
+    <string name="advanced_info_first_message">First Message</string>
+    <string name="advanced_info_last_message">Last Message</string>
+    <string name="advanced_info_contact_id">Contact ID</string>
+    <string name="advanced_info_all_numbers">Phone Numbers</string>
+    <string name="advanced_info_sender_address">Sender Address</string>
+    <string name="advanced_info_subject">Subject</string>
+    <string name="advanced_info_received_time">Received Time</string>
+
+    <!-- Advanced Sheet Actions -->
+    <string name="advanced_action_copy">Copy</string>
+    <string name="advanced_action_copy_text">Copy text</string>
+    <string name="advanced_action_copy_number">Copy number</string>
+    <string name="advanced_action_copy_address">Copy address</string>
+    <string name="advanced_action_share">Share / Forward</string>
+    <string name="advanced_action_save">Save to Gallery / Downloads</string>
+    <string name="advanced_action_copy_success">Copied</string>
+    <string name="advanced_action_save_success">Saved to Downloads</string>
+    <string name="advanced_action_save_failed">Save failed</string>
+    <string name="advanced_action_call_back">Call</string>
+    <string name="advanced_action_edit_contact">Edit contact</string>
+    <string name="advanced_action_save_number">Save number</string>
+    <string name="advanced_action_resend">Resend</string>
+    <string name="advanced_action_delete_message">Delete message</string>
+    <string name="advanced_action_delete_conversation">Delete conversation</string>
+    <string name="advanced_action_block_number">Block number</string>
+    <string name="advanced_action_mute_conversation">Mute notifications</string>
+    <string name="advanced_action_unmute_conversation">Unmute notifications</string>
+
+    <!-- Advanced Confirmation Dialogs -->
+    <string name="advanced_confirm_cancel">Cancel</string>
+    <string name="advanced_confirm_delete_message_title">Really delete this message from this phone?</string>
+    <string name="advanced_confirm_delete_message_button">Delete message</string>
+    <string name="advanced_confirm_delete_conversation_title">Really delete the whole conversation with %1$s from this phone?</string>
+    <string name="advanced_confirm_delete_conversation_button">Delete conversation</string>
+    <string name="advanced_confirm_block_number_title">Really block %s on this phone?</string>
+    <string name="advanced_confirm_block_number_button">Block</string>
+    <string name="advanced_confirm_mute_conversation_title">Mute notifications for the conversation with %1$s?</string>
+    <string name="advanced_confirm_mute_conversation_button">Mute</string>
+
+    <!-- Caregiver Log Lines for Destructive / Mode Actions -->
+    <string name="caregiver_log_message_deleted_on_phone">Message from %1$s deleted on phone</string>
+    <string name="caregiver_log_conversation_deleted_on_phone">Conversation with %1$s deleted on phone</string>
+    <string name="caregiver_log_number_blocked">A number was blocked on the phone</string>
+    <string name="caregiver_log_conversation_muted">Conversation with %1$s muted</string>
+
+    <!-- Emoji names for text-to-speech read-aloud. -->
+    <string name="emoji_thumbs_up">thumbs up</string>
+    <string name="emoji_thumbs_down">thumbs down</string>
+    <string name="emoji_heart">heart</string>
+    <string name="emoji_hearts">hearts</string>
+    <string name="emoji_smiling_face">smiling face</string>
+    <string name="emoji_happy_face">happy face</string>
+    <string name="emoji_laughing">laughing</string>
+    <string name="emoji_laughing_out_loud">laughing out loud</string>
+    <string name="emoji_winking">winking</string>
+    <string name="emoji_delighted">delighted</string>
+    <string name="emoji_kiss">a kiss</string>
+    <string name="emoji_sad_face">sad face</string>
+    <string name="emoji_crying">crying</string>
+    <string name="emoji_angry_face">angry face</string>
+    <string name="emoji_hooray">hooray</string>
+    <string name="emoji_celebrating">celebrating</string>
+    <string name="emoji_thank_you">thank you</string>
+    <string name="emoji_applause">applause</string>
+    <string name="emoji_waving">waving</string>
+    <string name="emoji_strong">strong</string>
+    <string name="emoji_flower">a flower</string>
+    <string name="emoji_flowers">flowers</string>
+    <string name="emoji_rose">a rose</string>
+    <string name="emoji_sunshine">sunshine</string>
+    <string name="emoji_good_luck">good luck</string>
+    <string name="emoji_cake">a cake</string>
+    <string name="emoji_present">a present</string>
+    <string name="emoji_sleeping">sleeping</string>
+    <string name="emoji_hug">a hug</string>
+    <string name="emoji_done">done</string>
+    <string name="emoji_telephone">telephone</string>
+    <string name="emoji_letter">a letter</string>
+    <string name="forward_label">Forward</string>
+    <string name="forward_dialog_title">Who shall it go to?</string>
+    <string name="forward_confirm_photo">Send the picture to %s?</string>
+    <string name="forward_confirm_video">Send the video to %s?</string>
+    <string name="forward_confirm_voice">Send the voice message to %s?</string>
+    <string name="forward_confirm_yes">Yes, send it</string>
+    <string name="forward_confirm_no">No</string>
+    <string name="forward_sent">On its way to %s.</string>
+    <string name="forward_failed">That did not work.</string>
+    <string name="forward_outcome_understood">All right</string>
+
+    <!-- The two arrows beside a long list: all the way up, all the way down. Spoken labels only
+         - the buttons show the arrow and nothing else. -->
+    <string name="jump_to_newest">To the newest</string>
+    <!-- The word on the button itself: it stands where the screen title was, so it is one word. -->
+    <string name="jump_newest">Newest</string>
+    <string name="viewer_position">%1$d of %2$d</string>
+    <string name="viewer_previous">Previous picture</string>
+    <string name="viewer_back">Back</string>
+    <string name="viewer_next">Next picture</string>
+    <string name="viewer_done">Done</string>
+    <string name="viewer_play">Play</string>
+    <!-- The album card. The second picture stands on a pile of the rest and says how many. -->
+    <plurals name="album_more_pictures">
+        <item quantity="one">%d more</item>
+        <item quantity="other">%d more</item>
+    </plurals>
+    <!-- The amber badge beside the name: pictures in this album she has not opened yet. -->
+    <plurals name="album_new_count">
+        <item quantity="one">%d new</item>
+        <item quantity="other">%d new</item>
+    </plurals>
+    <!-- Under the album: words inside it that the card itself does not show. -->
+    <plurals name="album_more_texts">
+        <item quantity="one">%d more text inside</item>
+        <item quantity="other">%d more texts inside</item>
+    </plurals>
+    <!-- Beside the name, for an album that is only words. -->
+    <plurals name="album_text_count">
+        <item quantity="one">%d text</item>
+        <item quantity="other">%d texts</item>
+    </plurals>
+
+    <!-- Payment / Wallet Status Button -->
+    <string name="payment_button_description">Unlock card for payment</string>
+    <string name="payment_pin_label">PIN</string>
+    <string name="payment_auth_title">Unlock Card</string>
+    <string name="payment_auth_subtitle">Please enter your PIN to pay</string>
+    <string name="payment_ready_title">Card is ready to pay</string>
+    <string name="payment_ready_hint">Hold the phone to the machine at the till</string>
+    <string name="payment_sleep_hint">Press the button on the side of the phone. Then no one can pay any more.</string>
+    <string name="payment_sleep_hint_fold">Close the phone. Then no one can pay any more.</string>
+    <string name="payment_sleep_dialog_title">If you do not want to pay any more</string>
+    <string name="payment_sleep_dialog_dismiss">Got it</string>
+    <!-- Before the PIN that unlocks the card, when a hint is set on the phone's own settings
+         screen. The hint itself is the caregiver's words; these are the frame around it. -->
+    <string name="payment_pin_hint_explanation">Next, the phone asks for your PIN. Once you have typed it, the card is ready to pay.</string>
+    <string name="payment_pin_hint_continue">Enter PIN</string>
+    <string name="caregiver_payment_hint_title">Paying</string>
+    <string name="caregiver_payment_hint_label">PIN hint before paying</string>
+    <string name="caregiver_payment_hint_help">Shown before the PIN entry, e.g. “Your PIN is the same as for your bank card”. Leave it empty for no hint. Never write the PIN itself: anyone at the till can read the screen.</string>
+    <string name="caregiver_payment_hint_save">Save hint</string>
+    <string name="caregiver_payment_hint_saved">Hint saved</string>
+    <string name="caregiver_payment_hint_removed">No hint any more</string>
+
+    <!-- Restart Hint Card -->
+    <string name="restart_hint_message">Bitte das Telefon einmal neu starten, damit gentle connection zuverlässig der Startbildschirm bleibt.</string>
+    <string name="restart_hint_dismiss">Verstanden</string>
+
+    <!-- Camera & Photo sending -->
+    <string name="camera_photo_for">Photo for %1$s</string>
+    <string name="camera_send_to_question">Send to %1$s?</string>
+    <string name="camera_take_photo">Take photo</string>
+    <string name="camera_switch">Switch</string>
+    <string name="camera_retake">Retake</string>
+    <string name="camera_send">Send</string>
+    <string name="camera_send_photo">Send photo</string>
+    <string name="camera_back">Back</string>
+    <string name="camera_permission_denied">The camera is not allowed.</string>
+    <string name="camera_send_failed">The photo was not delivered.</string>
+    <string name="camera_capture_failed">Could not take photo.</string>
+    <string name="action_show_photo">Show photo</string>
+    <string name="group_member_photo">Send %1$s a photo</string>
+    <string name="photo_home_button">Take photo</string>
+    <string name="camera_take_photo_title">Take photo</string>
+    <string name="camera_photo_is_good">Is the photo good?</string>
+    <string name="camera_next">Next</string>
+    <string name="photo_picker_title">Who shall I send this to?</string>
+    <string name="photo_confirm_person">Send photo to %1$s?</string>
+    <string name="photo_confirm_group">Send photo to \"%1$s\"?</string>
+
+    <plurals name="photo_group_member_count">
+        <item quantity="one">%d person</item>
+        <item quantity="other">%d people</item>
+    </plurals>
+    <plurals name="photo_group_members_see">
+        <item quantity="one">%d person will see the photo.</item>
+        <item quantity="other">%d people will see the photo.</item>
+    </plurals>
+
+    <!-- Step counter -->
+    <string name="steps_title">👣 Steps</string>
+    <string name="steps_today">Today</string>
+    <string name="steps_yesterday">Yesterday</string>
+    <string name="steps_collecting">counting …</string>
+</resources>
+

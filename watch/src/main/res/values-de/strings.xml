@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="watch_find_phone">Mein Telefon finden</string>
+
+    <string name="watch_nobody">Noch niemand da. Die Menschen von deinem Telefon erscheinen hier.</string>
+
+    <!-- Dieselbe Frage wie auf dem Telefon, in denselben Worten. -->
+    <string name="watch_call_question">Soll ich %s anrufen?</string>
+    <string name="watch_yes">Ja, anrufen</string>
+    <string name="watch_no">Jetzt nicht</string>
+    <string name="watch_ok">In Ordnung</string>
+
+    <string name="watch_phone_not_there">Dein Telefon antwortet nicht. Vielleicht ist es ausgeschaltet oder zu weit weg.</string>
+</resources>

@@ -1,0 +1,14 @@
+{
+  "name": "gentle-connection-firestore-tests",
+  "private": true,
+  "type": "module",
+  "description": "Tests firestore.rules against the Firestore emulator: npm install && npm test",
+  "scripts": {
+    "test": "firebase emulators:exec --only firestore --project demo-gc \"node rules.test.mjs\""
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.0",
+    "firebase": "^12.0.0",
+    "firebase-tools": "^15.0.0"
+  }
+}

@@ -1,0 +1,220 @@
+name: Android CI
+
+on:
+  # Docs and Markdown build nothing.
+  push:
+    branches: [ main ]
+    paths-ignore: [ 'docs/**', '**.md' ]
+  pull_request:
+    branches: [ main ]
+    paths-ignore: [ 'docs/**', '**.md' ]
+  workflow_dispatch:
+
+# A newer push to the same branch cancels the run still going for the older one.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Cross-compiles the native bridges and then builds/tests the Android app in one job.
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # The whole history, because the version code is the count of commits (see the root
+          # build file). The default shallow clone has one commit in it, so every build would
+          # call itself version 1001 and no build would ever look newer than the last.
+          fetch-depth: 0
+
+      # The bridge changes rarely and takes ~3 minutes to cross-compile, which was being paid on
+      # every push including pure-Kotlin ones. Key the cache on the Rust sources themselves, so
+      # a hit means the binary in the cache was built from exactly this code. Deliberately not
+      # keyed on the commit: that would never hit.
+      - name: Restore the built bridge binary
+        id: bridge-cache
+        uses: actions/cache@v4
+        with:
+          path: app/src/main/jniLibs/arm64-v8a/libthreema_bridge.so
+          key: bridge-so-${{ runner.os }}-${{ hashFiles('native/threema-bridge/src/**', 'native/threema-bridge/libthreema/**', 'native/threema-bridge/patches/**', 'native/threema-bridge/Cargo.toml', 'native/threema-bridge/Cargo.lock') }}
+
+      - name: Install Rust target and protoc
+        if: steps.bridge-cache.outputs.cache-hit != 'true'
+        run: |
+          rustup target add aarch64-linux-android
+          sudo apt-get update && sudo apt-get install -y protobuf-compiler
+          # Needs >= 3.15 for the proto3 optional fields in csp-e2e.proto. Printed because
+          # the failure it causes ("--experimental_allow_proto3_optional was not set") does
+          # not mention the version at all.
+          protoc --version
+
+      # Only reached when the sources did change. Makes that case incremental instead of a
+      # cold build of every dependency; restore-keys lets it reuse the previous lockfile's
+      # registry rather than re-downloading the crate index.
+      - name: Cache cargo registry and target directory
+        if: steps.bridge-cache.outputs.cache-hit != 'true'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            native/threema-bridge/target
+          key: cargo-${{ runner.os }}-${{ hashFiles('native/threema-bridge/Cargo.lock') }}
+          restore-keys: |
+            cargo-${{ runner.os }}-
+
+      # The bridge is the one place in this app with no JVM tests behind it, and it now decides
+      # how a message to several people is laid out on the wire — a field in the wrong order there
+      # sends her family's message to the right people about the wrong conversation. Runs on the
+      # host, only when the Rust actually changed, and before the cross-compile so a broken
+      # protocol change cannot reach an APK.
+      - name: Test the bridge
+        if: steps.bridge-cache.outputs.cache-hit != 'true'
+        run: |
+          cd native/threema-bridge
+          PROTOC=/usr/bin/protoc cargo test
+
+      - name: Cross-compile Threema bridge for Android arm64
+        if: steps.bridge-cache.outputs.cache-hit != 'true'
+        run: |
+          cd native/threema-bridge
+          TOOLCHAIN=$ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64
+          export CC_aarch64_linux_android=$TOOLCHAIN/bin/aarch64-linux-android29-clang
+          export AR_aarch64_linux_android=$TOOLCHAIN/bin/llvm-ar
+          export CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=$TOOLCHAIN/bin/aarch64-linux-android29-clang
+          export PROTOC=/usr/bin/protoc
+          cargo build --target aarch64-linux-android --release
+          mkdir -p ../../app/src/main/jniLibs/arm64-v8a
+          cp target/aarch64-linux-android/release/threema-gemini-bridge \
+             ../../app/src/main/jniLibs/arm64-v8a/libthreema_bridge.so
+
+      # The WhatsApp bridge. Go rather than Rust because whatsmeow is the only maintained
+      # implementation of WhatsApp's multi-device protocol, and CGO_ENABLED=0 because its session
+      # store is modernc's pure-Go SQLite — so this cross-compile needs no NDK sysroot at all and
+      # cannot go wrong in the ways the Rust one can.
+      #
+      # It resolves hostnames through servers handed to it by the app rather than through the C
+      # library: Android has no /etc/resolv.conf, so a cgo-free Go binary has no name servers and
+      # every connection fails. That was found by running this binary on the actual phone, and the
+      # fix is in main.go's configureResolver.
+      # Cached on a hash of its own sources, exactly as the Rust bridge above is, and for the
+      # same reason: this bridge changes rarely and was being rebuilt on every push, including
+      # the pure-Kotlin ones that are most of them. A hit means the binary in the cache was built
+      # from precisely this code.
+      #
+      # Deliberately not keyed on the commit — that would never hit — and deliberately including
+      # go.sum, because a dependency bump changes the binary without changing a line of our own.
+      - name: Restore the built WhatsApp bridge binary
+        id: wa-bridge-cache
+        uses: actions/cache@v4
+        with:
+          path: app/src/main/jniLibs/arm64-v8a/libwhatsapp_bridge.so
+          key: wa-bridge-so-${{ runner.os }}-${{ hashFiles('native/whatsapp-bridge/**/*.go', 'native/whatsapp-bridge/go.mod', 'native/whatsapp-bridge/go.sum') }}
+
+      # Both of these are skipped on a hit, which is what makes the saving real: installing Go is
+      # 19 seconds of a job that otherwise has no use for it.
+      - name: Set up Go
+        if: steps.wa-bridge-cache.outputs.cache-hit != 'true'
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache-dependency-path: native/whatsapp-bridge/go.sum
+
+      - name: Build WhatsApp bridge for Android arm64
+        if: steps.wa-bridge-cache.outputs.cache-hit != 'true'
+        run: |
+          cd native/whatsapp-bridge
+          go vet ./...
+          # Host tests, before the cross-compile. The pruner decides what gets pruned, so a bug here
+          # would drop messages silently without reporting it.
+          go test ./...
+          CGO_ENABLED=0 GOOS=android GOARCH=arm64 \
+            go build -trimpath -ldflags="-s -w" -o whatsapp-bridge .
+          mkdir -p ../../app/src/main/jniLibs/arm64-v8a
+          cp whatsapp-bridge ../../app/src/main/jniLibs/arm64-v8a/libwhatsapp_bridge.so
+
+      - name: Check the WhatsApp bridge is real and is for the right architecture
+        run: |
+          SO=app/src/main/jniLibs/arm64-v8a/libwhatsapp_bridge.so
+          test -s "$SO" || { echo "::error::$SO is missing or empty"; exit 1; }
+          file "$SO"
+          file "$SO" | grep -q 'ARM aarch64' \
+            || { echo "::error::$SO is not an aarch64 binary"; exit 1; }
+
+      # Runs whether the binary was just built or restored from cache — a cached artifact that
+      # is truncated or for the wrong architecture would otherwise sail straight into an APK.
+      - name: Check the binary is real and is for the right architecture
+        run: |
+          SO=app/src/main/jniLibs/arm64-v8a/libthreema_bridge.so
+          test -s "$SO" || { echo "::error::$SO is missing or empty"; exit 1; }
+          file "$SO"
+          file "$SO" | grep -q 'ARM aarch64' \
+            || { echo "::error::$SO is not an aarch64 binary"; exit 1; }
+
+      # From here on, the APK. The bridge is already sitting at the path the Android build
+      # expects — built or restored from cache a few steps up — so there is nothing to fetch.
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      # The real config lives in a repository secret, not in git. Without it the build still
+      # succeeds against the mock, but Firebase is unreachable at runtime — and Firestore does
+      # not report that as an error, it silently queues every write forever. So say loudly in
+      # the log which of the two an APK was built with.
+      - name: Provide google-services.json
+        env:
+          GOOGLE_SERVICES_JSON_B64: ${{ secrets.GOOGLE_SERVICES_JSON_B64 }}
+        run: |
+          if [ -n "$GOOGLE_SERVICES_JSON_B64" ]; then
+            printf '%s' "$GOOGLE_SERVICES_JSON_B64" | base64 -d > app/google-services.json
+            echo "Firebase: using the real config from secrets (project $(python3 -c 'import json;print(json.load(open("app/google-services.json"))["project_info"]["project_id"])'))"
+          elif [ ! -f app/google-services.json ]; then
+            cp app/google-services.json.example app/google-services.json
+            echo "Firebase: WARNING — building against the MOCK config. Firestore will not connect."
+          fi
+
+      # Without this the build falls back to AGP's per-machine throwaway debug key, so each run
+      # produces a differently-signed APK that cannot upgrade the previous one on a device.
+      - name: Provide the upload keystore
+        env:
+          SIGNING_KEYSTORE_B64: ${{ secrets.SIGNING_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$SIGNING_KEYSTORE_B64" ]; then
+            printf '%s' "$SIGNING_KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+            echo "Signing: using the upload keystore from secrets"
+          else
+            echo "Signing: WARNING — no keystore secret; APKs get a throwaway debug key and will not upgrade in place."
+          fi
+
+      - name: Build, Test & Lint
+        env:
+          SIGNING_STORE_FILE: ${{ secrets.SIGNING_KEYSTORE_B64 && format('{0}/upload.jks', runner.temp) || '' }}
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+        run: ./gradlew assembleDebug testDebugUnitTest lint --stacktrace
+
+
+      # Best-effort, and deliberately not allowed to fail the run. These are for reading after
+      # the fact; a full artifact quota should not turn a green build red over them.
+      - name: Upload Test & Lint Reports
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports
+          path: app/build/reports/

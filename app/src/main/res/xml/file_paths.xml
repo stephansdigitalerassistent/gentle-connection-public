@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  What the caregiver share sheet is allowed to hand to another app.
+
+  Deliberately not <root-path>: that grants this provider the whole filesystem the app can read,
+  to serve attachments that only ever live in the four directories below. Sharing one photograph
+  is not a reason to make every file the launcher can open reachable through a content URI.
+-->
+<paths>
+    <files-path name="files" path="." />
+    <cache-path name="cache" path="." />
+    <external-files-path name="external_files" path="." />
+    <external-cache-path name="external_cache" path="." />
+</paths>

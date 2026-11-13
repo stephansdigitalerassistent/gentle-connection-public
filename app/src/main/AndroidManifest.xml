@@ -1,0 +1,491 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Permissions required for gentle connection & VoIP calls -->
+    <!--
+        The messengers lose their sockets the moment the launcher is backgrounded: Android puts
+        the UID in APP_BACKGROUND and every connection fails with EPERM, silently. A foreground
+        service is the only supported way to keep them alive. See MessengerService.
+    -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!-- REMOTE_MESSAGING is the type the connections run as from Android 14; DATA_SYNC is only
+         for older phones, where that type does not exist. See MessengerService.connectionType. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_REMOTE_MESSAGING" />
+    <!-- So her messengers come back after the phone restarts. See service/RestartReceiver. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <uses-permission android:name="android.permission.READ_CALL_LOG" />
+    <!-- Her appointments, read from whichever Google account the phone is signed in to. Android
+         syncs Google Calendar into the calendar provider itself, so this is the whole of what
+         showing her calendar costs — see data/CalendarRepository. -->
+    <uses-permission android:name="android.permission.READ_CALENDAR" />
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.READ_SMS" />
+    <uses-permission android:name="android.permission.SEND_SMS" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera.any" android:required="false" />
+    <uses-permission android:name="android.permission.MANAGE_OWN_CALLS" />
+    <!--
+        Being the telephone rather than borrowing one. See telecom/GentlePhoneCallService: with
+        the dialler role, Android hands this app the ringing, the answering and the screen in
+        between, instead of handing her over to another app halfway through a call.
+
+        ANSWER_PHONE_CALLS is what lets the green circle actually pick up. READ_PHONE_STATE is how
+        Telecom is willing to say who is calling — without it the call arrives with no number, and
+        a ringing screen with nobody's name on it is a screen that cannot answer the only question
+        she has about it.
+    -->
+    <uses-permission android:name="android.permission.ANSWER_PHONE_CALLS" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+
+    <!--
+        Being the messages app. Android hands each arriving text straight to this app and stops
+        filing it itself, which is why sms/SmsDeliverReceiver is the most consequential file in
+        the project: what it does not store is stored nowhere.
+    -->
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
+    <uses-permission android:name="android.permission.RECEIVE_MMS" />
+    <uses-permission android:name="android.permission.RECEIVE_WAP_PUSH" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <!-- Raising the unlock sheet for the card. Asked for so that the sheet can be told to open
+         on the PIN keypad rather than the fingerprint reader — the card itself needs no
+         biometric, and none is read here. -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+    <!-- The phone answering "where are you?" from her watch. See FindPhoneActivity: it buzzes as
+         well as rings, because a phone down the side of an armchair is felt before it is heard. -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!--
+        Where the phone is, sent to whoever looks after her along with the fifteen-minute
+        heartbeat. Coarse is what the feature needs — the question is "is the phone at the flat",
+        not which room — and fine is asked for because a phone left in a hedge on the way back
+        from the shops is found with one and not the other.
+
+        BACKGROUND is the one that makes this feature answer the question actually being asked.
+        Without it the phone can only place itself while she is looking at the screen, so a phone
+        that has been in a coat pocket since this morning reports this morning's position — and
+        the moments somebody wants to look this up are exactly the moments nobody is holding it.
+        It has to be granted separately, on a system screen, and Android will not offer it in the
+        same dialog as the two above. See MainActivity.requestBackgroundLocation.
+
+        FOREGROUND_SERVICE_LOCATION goes with the `location` service type below. It is a normal
+        permission — granted at install, no dialog — and it is only the right to *declare* the
+        type; whether the type is actually claimed is decided at runtime. See MessengerService.
+    -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_SCAN"
+        android:usesPermissionFlags="neverForLocation"
+        tools:targetApi="s" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+
+    <!--
+        Removed from the merged manifest, not merely unused. Firebase's own libraries pull
+        com.google.android.gms.permission.AD_ID in transitively, and Play then asks — on the App
+        content questionnaire — whether the app collects an advertising ID. This app has no ads
+        and no analytics: it uses Firestore and Auth only, so the honest answer is no, and the
+        permission has to be gone from the built manifest for that answer to be true. Without
+        this line the declaration and the APK disagree, which is a policy problem rather than a
+        build one and therefore surfaces late, in the Play Console, on a release you wanted out.
+    -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove" />
+
+    <!-- Queries block for package visibility (Android 11+) -->
+    <queries>
+        <package android:name="ch.threema.app" />
+        <package android:name="com.whatsapp" />
+        <!-- gentle device, the management app: DeviceLinkProvider checks its signing certificate. -->
+        <package android:name="ch.heuscher.gentledevice" />
+        <intent>
+            <action android:name="android.intent.action.DIAL" />
+            <data android:scheme="tel" />
+        </intent>
+    </queries>
+
+    <uses-feature android:name="android.hardware.sensor.stepcounter" android:required="false" />
+    <uses-feature android:name="android.hardware.telephony" android:required="false" />
+    <uses-feature android:name="android.hardware.bluetooth" android:required="false" />
+    <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
+
+    <application
+        android:name=".GentleApplication"
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@android:style/Theme.Material.NoActionBar">
+
+        <!--
+            Main Home Launcher Activity.
+
+            Portrait only. Rotated, the reply row's square buttons take the whole height and the
+            messages are squeezed to nothing — the conversation looks empty rather than broken, and
+            she has no way to know that tipping the phone back would bring her daughter's message
+            back. Nothing here is worth reading sideways anyway.
+
+            Unfolding the phone is a configuration change. Without configChanges Android destroys
+            and recreates the activity every time she opens or closes it — which on the home screen
+            means an open dialog and a half-written message disappear because the phone changed
+            shape in her hands.
+        -->
+        <!--
+            windowSoftInputMode: the keyboard is this app's own business. Every screen with a text
+            field on it moves its own content out of the way — see KeyboardSpace.aboveTheKeyboard.
+
+            Left unsaid, Android chose "pan" for us, and then both of them moved. The reply box on
+            a conversation went up by the height of the keyboard because the app put it there, and
+            the system panned the whole window up by roughly that again to reveal a field that was
+            already in plain sight. What she saw was her conversation shoved off the top of the
+            screen under the clock, the box she was typing into stranded in the middle of it, and a
+            keyboard's worth of black between the two.
+
+            "Nothing" is the instruction: leave the window where it is and tell us how tall the
+            keyboard is. The app does the rest — which is also what keeps the four big buttons
+            along the bottom behind the keyboard instead of riding up above it.
+
+            It wants the keyboard reported as an inset, which is Android 11 and up. Below that the
+            reply box is covered again, as it was before any of this: fewer devices than this app
+            has users, and a covered box rather than a broken screen.
+        -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:clearTaskOnLaunch="true"
+            android:stateNotNeeded="true"
+            android:screenOrientation="portrait"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|density"
+            android:windowSoftInputMode="adjustNothing"
+            android:theme="@android:style/Theme.Material.NoActionBar">
+            
+            <!-- HOME launcher intent filter -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!--
+                Answering "dial this". Android will not even offer an app as the telephone unless
+                something here handles ACTION_DIAL, so these two filters are half of what the
+                dialler role is; the other half is the InCallService below.
+
+                Both forms, because they are different requests. Bare DIAL means "open the
+                telephone" and lands on the keys with nothing typed. DIAL or VIEW of a `tel:`
+                address — a number pressed in a browser or in a message — lands on the keys with
+                that number already in the field, and waits. Nothing rings until she presses the
+                green circle: see MainActivity.showForDialling.
+
+                Deliberately no ACTION_CALL or CALL_PRIVILEGED filter. Those mean "ring this
+                number now", and an app that starts a call because another app asked is an app
+                that can be made to ring anybody. The telephone role does not require them.
+            -->
+            <intent-filter>
+                <action android:name="android.intent.action.DIAL" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.DIAL" />
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="tel" />
+            </intent-filter>
+
+            <!--
+                "Write to this person", asked by another app. Required before Android will offer
+                this app as the messages app, in the same way ACTION_DIAL is required before it
+                will offer it as the telephone.
+
+                It lands on the launcher rather than on a compose screen, because there is no
+                compose screen to land on: writing to somebody here means opening what they wrote
+                and answering there (§3). Somebody else's "send a message" button therefore brings
+                her home rather than into a half-filled form she cannot finish.
+            -->
+            <intent-filter>
+                <action android:name="android.intent.action.SENDTO" />
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="sms" />
+                <data android:scheme="smsto" />
+                <data android:scheme="mms" />
+                <data android:scheme="mmsto" />
+            </intent-filter>
+
+            <!--
+                The same request in the two other shapes apps still send it. SENDTO alone left an
+                `sms:` link in the browser — which is a VIEW — going to Samsung's or Google's
+                messages app, and "open the messages app" (APP_MESSAGING) going to Google's, so
+                her texts were being written somewhere she never looks.
+
+                The mime type is the old form, which puts the number in an `address` extra. Lint
+                wants a URL on every VIEW filter; this form has none to give, by design.
+            -->
+            <intent-filter tools:ignore="AppLinkUrlError">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="vnd.android-dir/mms-sms" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.APP_MESSAGING" />
+            </intent-filter>
+        </activity>
+
+        <!--
+            Every text message the phone receives. See SmsDeliverReceiver: while this app holds
+            the messages role, Android does not file them itself.
+        -->
+        <receiver
+            android:name=".sms.SmsDeliverReceiver"
+            android:exported="true"
+            android:permission="android.permission.BROADCAST_SMS">
+            <intent-filter>
+                <action android:name="android.provider.Telephony.SMS_DELIVER" />
+            </intent-filter>
+        </receiver>
+
+        <!--
+            Picture messages. Declared because the role is not granted without it, and honestly
+            unimplemented: an MMS arriving while this app holds the role is dropped, not stored
+            elsewhere. That cost was accepted deliberately — see MmsDeliverReceiver.
+        -->
+        <receiver
+            android:name=".sms.MmsDeliverReceiver"
+            android:exported="true"
+            android:permission="android.permission.BROADCAST_WAP_PUSH">
+            <intent-filter>
+                <action android:name="android.provider.Telephony.WAP_PUSH_DELIVER" />
+                <data android:mimeType="application/vnd.wap.mms-message" />
+            </intent-filter>
+        </receiver>
+
+        <!-- "Can't talk now, text me instead." Required by the role; deliberately a no-op. -->
+        <service
+            android:name=".sms.RespondViaMessageService"
+            android:exported="true"
+            android:permission="android.permission.SEND_RESPOND_VIA_MESSAGE">
+            <intent-filter>
+                <action android:name="android.intent.action.RESPOND_VIA_MESSAGE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="sms" />
+                <data android:scheme="smsto" />
+                <data android:scheme="mms" />
+                <data android:scheme="mmsto" />
+            </intent-filter>
+        </service>
+
+        <!--
+            The telephone itself, once Android grants the role. Dormant code until then.
+
+            IN_CALL_SERVICE_UI says this app draws the call. There is deliberately **no**
+            `android.telecom.IN_CALL_SERVICE_RINGING` — Android keeps the ringing, with her
+            ringtone at her volume and her Do Not Disturb rules. Claiming it would let the app be
+            cleverer about which calls ring, and every one of those clevernesses is a new way for
+            the telephone to sit silent while her family try to reach her, discovered weeks later
+            as "she never picks up any more". See GentlePhoneCallService.
+        -->
+        <service
+            android:name=".telecom.GentlePhoneCallService"
+            android:exported="true"
+            android:permission="android.permission.BIND_INCALL_SERVICE">
+            <meta-data
+                android:name="android.telecom.IN_CALL_SERVICE_UI"
+                android:value="true" />
+            <intent-filter>
+                <action android:name="android.telecom.InCallService" />
+            </intent-filter>
+        </service>
+
+        <!--
+            The call, on the screen. Over the lock screen and turning the screen on for the same
+            reason FindPhoneActivity does: the phone is face down on a table and a call she has to
+            unlock the phone to answer is a call she does not answer.
+
+            Excluded from recents so a finished call is not left sitting in the list of things she
+            was doing, where pressing it would open a call screen for a call that has ended.
+
+            Unfolding the phone mid-call must not tear down the screen with the hang-up button on
+            it while she is talking. configChanges keeps the call alive across opening and closing.
+        -->
+        <activity
+            android:name=".telecom.PhoneCallActivity"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|density"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait"
+            android:showOnLockScreen="true"
+            android:showWhenLocked="true"
+            android:taskAffinity=""
+            android:turnScreenOn="true"
+            android:theme="@android:style/Theme.Material.NoActionBar" />
+
+        <!--
+            Answering and hanging up from the notification — the lock screen buttons and the shade.
+            Not exported: the only sender is this app's own notification, and an exported receiver
+            here would let any app on the phone hang up her calls.
+        -->
+        <receiver
+            android:name=".telecom.CallActionReceiver"
+            android:exported="false" />
+
+        <!--
+            Starts the messengers again after an update and after a restart, which both stop them
+            with nobody pressing Home to bring them back. Not exported: both broadcasts come from
+            the system, which reaches it regardless, and nothing else has a reason to.
+        -->
+        <receiver
+            android:name=".service.RestartReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <!--
+            Senior Call Screen Activity.
+
+            Survives opening and folding the phone mid-call without tearing down the screen and the
+            hang-up button while she is talking.
+        -->
+        <activity
+            android:name=".voip.CallActivity"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|density"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:theme="@android:style/Theme.Material.NoActionBar" />
+
+        <!--
+            Fail-at-tap explanation screen.
+
+            Shown over the keyguard when a call tap fails immediately (e.g. roaming without
+            Threema, bridge unreachable, or no number/identity) so she understands why the call
+            could not start.
+        -->
+        <activity
+            android:name=".voip.CallFailedActivity"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|density"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:theme="@android:style/Theme.Material.NoActionBar" />
+
+        <!--
+            Keeps Threema and WhatsApp connected while she is in another app.
+
+            `remoteMessaging` for the connections themselves: no daily time limit, and allowed to
+            start after the phone restarts, neither of which is true of `dataSync` on Android 15.
+            `dataSync` stays declared for phones older than Android 14, which have no
+            `remoteMessaging`. See MessengerService.connectionType.
+
+            `location` alongside because from Android 14 a foreground service may only do what its
+            declared types say it does, and this process is what asks the phone where it is
+            between heartbeats. Declared here, claimed at runtime only when the permissions
+            behind it are actually held — see MessengerService.startInForeground, where getting
+            that wrong would take her messages down and not just her position.
+        -->
+        <service
+            android:name=".service.MessengerService"
+            android:foregroundServiceType="remoteMessaging|dataSync|location"
+            android:exported="false" />
+
+        <!--
+            Her watch, talking to the phone. Two paths only: ring somebody, and make a noise so
+            the phone can be found. See PhoneWearableListenerService for why there is nothing
+            about answering or hanging up here.
+
+            `exported` because Google Play Services is what starts it, and the intent filter is
+            scoped to the two paths so no other message ever wakes this process. The `wear`
+            scheme with `host="*"` is the form the Wear layer requires; a filter without it
+            receives nothing at all, silently.
+        -->
+        <service
+            android:name=".data.PhoneWearableListenerService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+                <data
+                    android:host="*"
+                    android:pathPrefix="/gentle_connection"
+                    android:scheme="wear" />
+            </intent-filter>
+        </service>
+
+        <!--
+            Shown over the lock screen, because the whole point is to be found from another room
+            and she may well have no idea the phone is locked. Excluded from recents so that the
+            next person to look at this phone does not find "Here I am!" sitting in the list of
+            things she was doing.
+
+            configChanges keeps the screen and alarm sound uninterrupted if the phone unfolds
+            while being picked up.
+        -->
+        <activity
+            android:name=".FindPhoneActivity"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|density"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:showOnLockScreen="true"
+            android:showWhenLocked="true"
+            android:taskAffinity=""
+            android:turnScreenOn="true" />
+
+        <!-- ConnectionService for Telecom incoming/outgoing calls -->
+        <service
+            android:name=".voip.GentleConnectionService"
+            android:permission="android.permission.BIND_TELECOM_CONNECTION_SERVICE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.telecom.ConnectionService" />
+            </intent-filter>
+        </service>
+
+        <!-- FileProvider for sharing media attachments in caregiver Advanced Mode -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+        <!-- The one call gentle device may make into this app: link its Firebase uid to this
+             device. Exported, but the provider answers only the certificate-pinned gentle device
+             package; see DeviceLinkProvider. -->
+        <provider
+            android:name=".data.DeviceLinkProvider"
+            android:authorities="${applicationId}.devicelink"
+            android:exported="true" />
+
+    </application>
+
+
+</manifest>
+

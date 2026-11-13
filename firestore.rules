@@ -1,0 +1,309 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Claiming used to additionally require a non-anonymous account — a Google sign-in — on the
+    // reasoning that anything granting access to her data must name a person. It named nobody in
+    // practice. What a caregiver actually does is tap the link on her phone, and the sign-in was a
+    // Google account chosen at that moment, on a phone that might be a neighbour's; the uid it
+    // produced was as anonymous to us as an anonymous one, and the second person who tapped the
+    // same link got in exactly as easily. It bought no identity and cost a login screen at the one
+    // moment somebody is standing in her kitchen trying to help.
+    //
+    // So the barrier is the pairing code and nothing else — six characters, one device, ten
+    // minutes, single-document lookup, and only ever adding the caller's own uid. Whoever holds a
+    // live code was standing at her phone, which is the only claim the old rule could really make
+    // either. See the caregiver portal's initFirebase for the other half of this.
+    function isDeviceOwner(deviceId) {
+      return isSignedIn() &&
+        get(/databases/$(database)/documents/devices/$(deviceId)).data.deviceUid == request.auth.uid;
+    }
+
+    function isCaregiver(deviceId) {
+      return isSignedIn() &&
+        request.auth.uid in get(/databases/$(database)/documents/devices/$(deviceId)).data.caregiverUids;
+    }
+
+    function isDeviceOrCaregiver(deviceId) {
+      return isDeviceOwner(deviceId) || isCaregiver(deviceId);
+    }
+
+    // gentle device, the phone's management app. It signs in anonymously with a uid of its own —
+    // it is a different app — and gentle connection, after checking the caller's signing
+    // certificate on the phone, writes that uid onto its own device document as dpcUid. See
+    // DeviceLinkProvider.
+    function isDpc(deviceId) {
+      return isSignedIn() &&
+        get(/databases/$(database)/documents/devices/$(deviceId)).data.get('dpcUid', '') == request.auth.uid;
+    }
+
+    // The owner is the person who will set policy and send commands to the phone (slice 3).
+    // Note that `isDeviceOwner` above means the phone itself, not this person.
+    //
+    // Why the owner list lives in a separate document (`access/owners`) rather than on the
+    // device document: the phone (`deviceUid`) may rewrite any field of its own device document,
+    // so the owner list must be out of the phone's reach.
+    //
+    // Why the Google identity is required: decision 4 (PLAN §8). An anonymous uid on the owner
+    // list counts for nothing until it has been linked to a Google account.
+    function isOwner(deviceId) {
+      return isSignedIn() &&
+        'google.com' in request.auth.token.firebase.identities &&
+        request.auth.uid in get(/databases/$(database)/documents/devices/$(deviceId)).data.caregiverUids &&
+        exists(/databases/$(database)/documents/devices/$(deviceId)/access/owners) &&
+        request.auth.uid in get(/databases/$(database)/documents/devices/$(deviceId)/access/owners).data.uids;
+    }
+
+    // Pairing codes collection
+    match /pairing_codes/{code} {
+      // A code's shape, and how long it may live. Without the cap a code could be written to
+      // expire in ten years: squatted in advance, it waits for a phone to draw the same six
+      // characters, and the caregiver typing them links to the squatter's device instead and
+      // starts filling it with her contacts. Thirty minutes is the ten a code is valid for plus
+      // room for a phone clock that is wrong.
+      function isPairingCodeShape() {
+        return request.resource.data.keys().hasOnly(['deviceId', 'expiresAt', 'createdAt']) &&
+          request.resource.data.deviceId is string &&
+          request.resource.data.expiresAt is timestamp &&
+          request.resource.data.expiresAt < request.time + duration.value(30, 'm');
+      }
+
+      // Creation: the phone creates a code for a device document it already owns.
+      allow create: if isSignedIn() &&
+        isPairingCodeShape() &&
+        get(/databases/$(database)/documents/devices/$(request.resource.data.deviceId)).data.deviceUid == request.auth.uid;
+
+      // Read: single-document lookup only, by anybody signed in — which now includes the
+      // anonymous session the portal creates for a caregiver arriving on the link. `get` rather
+      // than `read` is deliberate and is the part that matters: `read` would also permit `list`,
+      // which would let anyone enumerate every live pairing code and claim any phone. The code
+      // itself is the secret, so it must stay unguessable AND unlistable.
+      allow get: if isSignedIn();
+
+      // Update: only the phone that created the code, and never to point it at another device.
+      //
+      // This used to check only who owned the device the code pointed at *before* the write.
+      // Anybody could then create a code for a throwaway device of their own, re-point it at her
+      // device id — which the portal shows every caregiver and every code document carries — and
+      // claim her phone with it. That included a caregiver whose access had just been removed.
+      allow update: if isSignedIn() &&
+        isPairingCodeShape() &&
+        request.resource.data.deviceId == resource.data.deviceId &&
+        get(/databases/$(database)/documents/devices/$(resource.data.deviceId)).data.deviceUid == request.auth.uid;
+
+      // Delete: only the phone that created the code.
+      allow delete: if isSignedIn() &&
+        get(/databases/$(database)/documents/devices/$(resource.data.deviceId)).data.deviceUid == request.auth.uid;
+    }
+
+    // Devices collection
+    match /devices/{deviceId} {
+      // Read: the phone itself or a linked caregiver. The caregiver portal's
+      // `where('caregiverUids','array-contains',uid)` query satisfies this for `list`.
+      //
+      // `resource == null` is the first-run case and it is load-bearing: on a fresh install the
+      // phone reads this document to find out whether it has to create it, and a missing
+      // document has no `deviceUid` to compare against — so without this clause the read is
+      // denied, the bootstrap throws before it ever calls `set`, and the device document can
+      // never come into existence. It leaks nothing: the read returns an absent document either
+      // way, and every document that does exist is still checked against the two owners below.
+      allow read: if isSignedIn() && (
+        resource == null ||
+        request.auth.uid == resource.data.deviceUid ||
+        request.auth.uid in resource.data.caregiverUids
+      );
+
+      // Create: the phone creating its own document, with nobody linked yet.
+      allow create: if isSignedIn() &&
+        request.resource.data.deviceUid == request.auth.uid &&
+        request.resource.data.caregiverUids.size() == 0;
+
+      // Update, two distinct allowances:
+      allow update: if isSignedIn() && (
+        // a) the phone maintaining its own document (lastSeenAt, pairingCode, ...)
+        (request.auth.uid == resource.data.deviceUid) ||
+        // b) the claim: a caregiver linking themselves via a valid pairing code. Signed in by any
+        // means, including anonymously — see the note on the helpers above for why the code is
+        // the whole of the barrier.
+        (
+          isSignedIn() &&
+          // Only caregiverUids may change (pairingCode may be re-stamped to the code
+          // being redeemed, which is the value we validate below anyway).
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['caregiverUids', 'pairingCode']) &&
+          // Nobody may be removed, and the only UID that may be added is the caller's own.
+          //
+          // `hasOnly` rather than `== [request.auth.uid]`, because the added set is legitimately
+          // empty when the caller is already linked. arrayUnion is idempotent, so a caregiver
+          // who opens the link a second time — the ordinary way to reach the settings — writes a
+          // list identical to the one already there, and the stricter form denied it. What they
+          // saw was "Zugriff verweigert. Sie haben keine Berechtigung für dieses Gerät", which
+          // says the opposite of the truth to the one person who does have permission.
+          request.resource.data.caregiverUids.hasAll(resource.data.caregiverUids) &&
+          request.resource.data.caregiverUids.removeAll(resource.data.caregiverUids)
+            .hasOnly([request.auth.uid]) &&
+          // A matching, unexpired pairing code must exist for THIS device.
+          request.resource.data.pairingCode is string &&
+          exists(/databases/$(database)/documents/pairing_codes/$(request.resource.data.pairingCode)) &&
+          get(/databases/$(database)/documents/pairing_codes/$(request.resource.data.pairingCode)).data.deviceId == deviceId &&
+          get(/databases/$(database)/documents/pairing_codes/$(request.resource.data.pairingCode)).data.expiresAt > request.time
+        ) ||
+        // c) a caregiver leaving: removing their own uid and nobody else's, adding nothing. The
+        // portal's "Zugang hier entfernen" does this before it signs out, so that leaving no longer
+        // leaves a dead uid behind with her data still readable through it. Removing anybody
+        // else stays with the phone (a), which can clear the whole list.
+        (
+          isSignedIn() &&
+          request.auth.uid in resource.data.caregiverUids &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['caregiverUids']) &&
+          request.resource.data.caregiverUids.removeAll(resource.data.caregiverUids).size() == 0 &&
+          resource.data.caregiverUids.removeAll(request.resource.data.caregiverUids)
+            .hasOnly([request.auth.uid])
+        )
+      );
+
+      // Settings subcollection: her contacts and phone numbers live here.
+      match /settings/{document} {
+        allow read, write: if isDeviceOrCaregiver(deviceId);
+      }
+
+      // Status subcollection: the phone's account of what has gone wrong on it.
+      //
+      // Asymmetric on purpose, and the only subcollection here that is. `settings` is a
+      // conversation — the phone writes some of it, the caregiver writes the rest. This is a
+      // report: the phone states what happened to it and the people who look after her read it.
+      // A caregiver who could write here could clear a fault they had not fixed, or manufacture
+      // one, and either would make the whole log worth less than nothing to the next reader.
+      match /status/{document} {
+        allow read: if isDeviceOrCaregiver(deviceId);
+        allow write: if isDeviceOwner(deviceId);
+      }
+
+      // Messages subcollection: written by bridge (Admin SDK). Device and caregivers read. Device updates isRead & reaction.
+      match /messages/{messageId} {
+        allow read: if isDeviceOrCaregiver(deviceId);
+        allow update: if isDeviceOwner(deviceId) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead', 'reaction']);
+      }
+
+      // Outbox subcollection: closed. It was a queue of messages to send AS HER for a server-side
+      // bridge, and nothing has drained it for a long time — a write here was reported to her as
+      // sent and reached nobody. The app no longer writes it (see SendDispatch); refusing the
+      // write means an old build on a phone is told "not sent", which is the truth.
+      match /outbox/{outboxId} {
+        allow read: if isDeviceOrCaregiver(deviceId);
+        allow create: if false;
+      }
+
+      // Partners subcollection: read by device & caregivers, updated by caregivers. Written initially by bridge.
+      match /partners/{partnerId} {
+        allow read: if isDeviceOrCaregiver(deviceId);
+        allow update: if isCaregiver(deviceId);
+      }
+
+      // What the management app reports about the phone: its state (battery, storage, network,
+      // patch level) and how far the phone matches its policy. A report, like status/: only the
+      // management app writes it, and only these two documents, so a caregiver can neither clear
+      // a fault nor invent one. Nobody deletes.
+      match /managed/{doc} {
+        allow read: if isDeviceOrCaregiver(deviceId) || isDpc(deviceId);
+        allow create, update: if isDpc(deviceId) && doc in ['state', 'compliance'];
+      }
+
+      // Access control lists (such as `access/owners`). Read by the phone, caregivers and the
+      // management app (DPC). No client writes at all in slice 3a: the first owner is written
+      // with admin credentials by scripts/bootstrap-owner.sh, and portal-side adding/removing
+      // of owners comes later. Nothing else uses isOwner yet (policy in the next part will).
+      match /access/{doc} {
+        allow read: if isDeviceOrCaregiver(deviceId) || isDpc(deviceId);
+        allow write: if false;
+      }
+
+      // Remote management policy (policy/current) and location consent (policy/consent) [docs/phase1b.md §3b].
+      // Created and updated only by the owner (isOwner). Read by the phone, caregivers and the DPC.
+      // Separate from the device document so that the phone cannot rewrite owner-steered settings.
+      // No deletes.
+      match /policy/{doc} {
+        allow read: if isDeviceOrCaregiver(deviceId) || isDpc(deviceId);
+        allow create, update: if isOwner(deviceId) && (
+          (doc == 'current' &&
+           request.resource.data.keys().hasAll(['enforcing', 'advancedMode', 'updatedAt', 'updatedBy']) &&
+           request.resource.data.keys().hasOnly(['enforcing', 'advancedMode', 'updatedAt', 'updatedBy']) &&
+           request.resource.data.enforcing is bool &&
+           request.resource.data.advancedMode is bool &&
+           request.resource.data.updatedAt == request.time &&
+           request.resource.data.updatedBy == request.auth.uid) ||
+          (doc == 'consent' &&
+           request.resource.data.keys().hasAll(['location', 'text', 'updatedAt', 'updatedBy']) &&
+           request.resource.data.keys().hasOnly(['location', 'text', 'updatedAt', 'updatedBy']) &&
+           request.resource.data.location is bool &&
+           request.resource.data.text is string &&
+           request.resource.data.updatedAt == request.time &&
+           request.resource.data.updatedBy == request.auth.uid)
+        );
+      }
+
+      // Remote management commands dispatched by the owner (refresh, openApp, reboot).
+      // Created in 'pending' state by the owner. Handled and updated once by the DPC into a
+      // terminal status ('done', 'failed', 'rejected', 'expired'). Read by phone, caregivers
+      // and DPC. No deletes.
+      match /commands/{cmdId} {
+        allow read: if isDeviceOrCaregiver(deviceId) || isDpc(deviceId);
+        allow create: if isOwner(deviceId) &&
+          request.resource.data.keys().hasAll(['type', 'args', 'createdBy', 'createdAt', 'status']) &&
+          request.resource.data.keys().hasOnly(['type', 'args', 'createdBy', 'createdAt', 'status']) &&
+          request.resource.data.type in ['refresh', 'openApp', 'reboot'] &&
+          request.resource.data.args is map &&
+          request.resource.data.createdBy == request.auth.uid &&
+          request.resource.data.createdAt == request.time &&
+          request.resource.data.status == 'pending';
+        allow update: if isDpc(deviceId) &&
+          resource.data.status == 'pending' &&
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['status', 'result', 'handledAt']) &&
+          request.resource.data.status in ['done', 'failed', 'rejected', 'expired'] &&
+          request.resource.data.handledAt == request.time;
+      }
+
+      // Append-only audit log of steering actions. Created by the owner (actor == 'owner') or
+      // the management app (actor == 'dpc'). Visible to the phone, every caregiver and the DPC.
+      // Never updated or deleted.
+      match /audit/{auditId} {
+        allow read: if isDeviceOrCaregiver(deviceId) || isDpc(deviceId);
+        allow create: if
+          request.resource.data.keys().hasAll(['at', 'actor', 'uid', 'action', 'detail']) &&
+          request.resource.data.keys().hasOnly(['at', 'actor', 'uid', 'action', 'detail']) &&
+          request.resource.data.at == request.time &&
+          request.resource.data.action is string &&
+          request.resource.data.action.size() <= 64 &&
+          request.resource.data.detail is string &&
+          request.resource.data.detail.size() <= 500 &&
+          (
+            (isOwner(deviceId) && request.resource.data.actor == 'owner' && request.resource.data.uid == request.auth.uid) ||
+            (isDpc(deviceId) && request.resource.data.actor == 'dpc' && request.resource.data.uid is string)
+          );
+      }
+
+      // Help requests from the support button. The phone writes them; a caregiver may only take
+      // one or close it, never rewrite where she was or what was sent. Nobody deletes them.
+      match /supportRequests/{requestId} {
+        allow read: if isDeviceOrCaregiver(deviceId);
+        allow create, update: if isDeviceOwner(deviceId);
+        allow update: if isCaregiver(deviceId) &&
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['status', 'claimedBy', 'claimedVia', 'claimedAt']) &&
+          request.resource.data.status in ['claimed', 'closed'];
+      }
+    }
+
+    // Deny all other collections by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

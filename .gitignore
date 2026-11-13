@@ -1,0 +1,52 @@
+# Android / Gradle
+*.iml
+.gradle/
+build/
+/local.properties
+.idea/
+.DS_Store
+/captures
+.externalNativeBuild
+.cxx/
+*.apk
+*.aab
+*.keystore
+release.keystore
+
+# Secrets / config
+google-services.json
+firebase-key.json
+caregiver-portal/config.js
+
+# Firebase CLI deploy cache (hashes of what was last uploaded)
+.firebase/
+
+# Node (portal tooling, if any)
+node_modules/
+
+# Logs
+*.log
+
+# agy working files
+.agy-brief.md
+.agy-run.log
+
+# Rust build artifacts for the vendored Threema bridge
+native/**/target/
+
+# The Android bridge binary is produced by CI (cross-compiled against the NDK) and
+# must never be committed. A checked-in copy is either a stale build or — as happened
+# once — an empty placeholder that packages fine and fails on the phone.
+app/src/main/jniLibs/
+
+# local CI-watch scratch
+.ci-current
+.ci-run-id
+
+# Signing material. The upload key must never be committed.
+keystore.properties
+*.jks
+*.keystore
+
+# The Go bridge binary, built in CI and packed into the APK as a .so.
+native/whatsapp-bridge/whatsapp-bridge
